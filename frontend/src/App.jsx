@@ -1,20 +1,26 @@
-import './App.css'
-import banner from './images/banner.png'
+import './App.css';
+import { useState } from 'react';
+import PreGameLayout from './components/PreGameLayout';
+import LoginSignup from './pages/LoginSignup';
+import JoinGame from './pages/JoinGame';
+import EnterGameCode from './pages/EnterGameCode';
 
 const App = () => {
-    return (
-    <div id='app'>
-        <div className='top'>
-            <img className="banner-img" src={banner} alt="Exploding Kittens banner" />
-        </div>
-        <div className='center'>
-          
-        </div>
-        <div className='bottom'>
+    // State to manage which component to display
+    const [currentPage, setCurrentPage] = useState('login');
 
-        </div>
-    </div>
-  );
+    // Function to change the page
+    const changePage = (page) => {
+        setCurrentPage(page);
+    };
+
+    return (
+        <PreGameLayout>
+            {currentPage === 'login' && <LoginSignup changePage={changePage} />}
+            {currentPage === 'game-selection' && <JoinGame changePage={changePage} />}
+            {currentPage === 'enter-code' && <EnterGameCode changePage={changePage} />}
+        </PreGameLayout>
+    );
 };
 
 export default App;
