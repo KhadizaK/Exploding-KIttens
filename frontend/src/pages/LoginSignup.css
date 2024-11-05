@@ -1,0 +1,36 @@
+.LoginSignup .login, .LoginSignup .signup, .LoginSignup .guest {
+    margin: .5rem 0 .5rem 0;
+}
+
+.socmed-icons {
+    display: flex;
+    justify-content: center;
+}
+
+.socmed-icons img:hover {
+    cursor: pointer;
+}
+
+.socmed-icons img {
+    max-width: 4%;
+    margin: 0 .5rem 0 .5rem;
+}
+
+.login, .signup, .guest {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login form, .signup form {
+    display: flex;
+    flex-direction: column;
+}
+
+
+@media (max-width: 600px) {
+    .socmed-icons img {
+        max-width: 15%;
+    }
+  }
+  
