@@ -13,6 +13,48 @@ Exploding Kittens is a strategic, family-friendly card game where players draw c
 4. Use action cards to skip turns, shuffle the deck, peek at the top cards, or defuse an exploding kitten.
 5. The last player remaining wins the game.
 
+## Project Structure
+- `client/`: Contains React app with Socket.IO integration.
+- `server/`: Contains Express server setup.
+
+## Setup Instructions
+
+### Client Setup
+1. Navigate to the `client` folder:
+   ```bash
+   cd client
+2. Install client dependencies:
+   ```bash
+   yarn install
+3. Start the client:
+   ```bash
+   yarn start
+
+### Server Setup
+1. Navigate to the `server` folder:
+   ```bash
+   cd server
+2. Install client dependencies:
+   ```bash
+   yarn install
+3. Start the client:
+   ```bash
+   yarn start
+
+## Development Workflow
+
+1. Ensure both client and server are running for full-stack functionality.
+2. Before commiting code use `yarn lint` and `yarn format` in each folder (client or server) to check for code style issues. (Currently, lint and format does not work for client).
+
+## Linting & Formatting
+
+1. ESLint and Prettier are configured to enforce consistent coding style.
+2. Run the following command to auto-format code:
+   ```bash
+   yarn format
+
+   
+
 <!---## Features
 
 - **Multiplayer Gameplay**: Play with friends or random users online in real-time.
