@@ -45,6 +45,7 @@ Exploding Kittens is a strategic, family-friendly card game where players draw c
 
 1. Ensure both client and server are running for full-stack functionality.
 2. Before commiting code use `yarn lint` and `yarn format` in each folder (client or server) to check for code style issues. (Currently, lint and format does not work for client).
+3. Please checkout this video it explains how socket.io works with frontend and backend: [https://www.youtube.com/watch?v=djMy4QsPWiI&t=664s)
 
 ## Linting & Formatting
 
