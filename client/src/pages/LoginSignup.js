@@ -10,7 +10,7 @@ const LoginSignup = () => {
             <div className='flex flex-col items-center space-y-2'>
                 <Button title='Login' link='/login' />
                 <Button title='Sign Up' link='/register' />
-                <Button title='Continue as Guest' link='/' />
+                <Button title='Continue as Guest' link='/join-create-gameroom' />
             </div>
         </div>
     )

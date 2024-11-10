@@ -4,7 +4,7 @@ import Button from '../components/Button'
 
 const LoginPage = () => {
     return (
-        <div className='LoginPage bg-ek-bg h-screen flex flex-col space-y-4 justify-center items-center'>
+        <div className='LoginPage bg-ek-bg text-ek-txt h-screen flex flex-col space-y-4 justify-center items-center'>
             <Banner />
 
             <div className='flex flex-col items-center space-y-2'>

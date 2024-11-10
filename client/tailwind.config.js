@@ -7,7 +7,7 @@ module.exports = {
     extend: {},
     colors: {
       'ek-bg': '#830308',
-      'ek-txt': '#F8A83E',
+      'ek-txt': '#f5a435',
     }
   },
   plugins: [],
