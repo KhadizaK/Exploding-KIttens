@@ -7,9 +7,11 @@ import {
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import LoginPage from './pages/LoginPage';
 
 const router = createBrowserRouter([
   { path:'/', element:<App /> },
+  { path:'/login', element:<LoginPage /> },
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

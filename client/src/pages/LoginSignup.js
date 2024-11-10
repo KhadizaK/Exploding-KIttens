@@ -8,7 +8,7 @@ const LoginSignup = () => {
             <Banner />
 
             <div className='flex flex-col items-center space-y-2'>
-                <Button title='Login' link='/' />
+                <Button title='Login' link='/login' />
                 <Button title='Sign Up' link='/' />
                 <Button title='Continue as Guest' link='/' />
             </div>
