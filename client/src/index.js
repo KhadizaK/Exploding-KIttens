@@ -1,13 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import JoinCreateGameRoom from './pages/JoinCreateGameRoom';
+
+const router = createBrowserRouter([
+  { path:'/', element:<App /> },
+  { path:'/login', element:<LoginPage /> },
+  { path:'/register', element:<RegisterPage /> },
+  { path:'/join-create-gameroom', element:<JoinCreateGameRoom /> },
+]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 

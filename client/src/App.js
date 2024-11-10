@@ -1,34 +1,22 @@
-import "./App.css";
-import io from "socket.io-client";
-import { useEffect, useState } from 'react';
+import React from 'react'
+import { Routes, Route } from 'react-router-dom';
+import LoginSignup from './pages/LoginSignup';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import JoinCreateGameRoom from './pages/JoinCreateGameRoom';
 
-const socket = io.connect("http://localhost:3001");
-
-function App() {
-  const [message, setMessage] = useState("");
-  const [messageReceived, setMessageReceived] = useState("");
-  const sendMessage = () => {
-    socket.emit("send_message", {message});
-  };
-
-  useEffect(() => {
-    socket.on("receive_message", (data) => {
-      setMessageReceived(data.message);
-    });
-  }, [socket]);
+const App = () => {
   return (
-    <div className="App">
-      <input 
-        placeholder="Welcome to Exploding Kittens" 
-        onChange={(event) => {
-          setMessage(event.target.value);
-        }}
-     />
-      <button onClick={sendMessage}> Send Message </button>
-      <h1>Message: </h1>
-      {messageReceived}
+    <div className='App bg-ek-bg h-screen flex justify-center items-center'>
+      {/* <Button /> */}
+      <Routes>
+        <Route path="/" element={<LoginSignup />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/join-create-gameroom" element={<JoinCreateGameRoom />} />
+      </Routes>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
