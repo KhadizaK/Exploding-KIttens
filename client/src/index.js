@@ -7,12 +7,14 @@ import reportWebVitals from './reportWebVitals';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JoinCreateGameRoom from './pages/JoinCreateGameRoom';
+import GameRoom from './pages/GameRoom';
 
 const router = createBrowserRouter([
   { path:'/', element:<App /> },
   { path:'/login', element:<LoginPage /> },
   { path:'/register', element:<RegisterPage /> },
   { path:'/join-create-gameroom', element:<JoinCreateGameRoom /> },
+  { path:'/gameroom', element:<GameRoom />},
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
