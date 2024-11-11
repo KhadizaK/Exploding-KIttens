@@ -7,18 +7,15 @@ const GameInSession = () => {
         <div className='GameInSession bg-gameroom h-screen
                     flex items-center'>
 
-
-            <div className='fixed left-8'>
+            <div id='left-side' className='fixed left-8'>
                 <div id='player-1-cards' className='sticky top-8 object-cover h-max w-24'>
-                    {/* <div id='player-1-cards' className='flex -rotate-90'> */}
                     {/* Player 1 cards placeholder */}
                     {[...Array(8)].map((_, index) => (
                         <Card player='1' position={index} key={`player-1-card-${index}`} />
                     ))}
                 </div>
-                <div id='player-1-cards' className='sticky object-cover h-max w-24'>
-                    {/* <div id='player-1-cards' className='flex -rotate-90'> */}
-                    {/* Player 1 cards placeholder */}
+                <div id='player-2-cards' className='sticky object-cover h-max w-24'>
+                    {/* Player 2 cards placeholder */}
                     {[...Array(8)].map((_, index) => (
                         <Card player='2' position={index} key={`player-1-card-${index}`} />
                     ))}
@@ -31,17 +28,15 @@ const GameInSession = () => {
                 <Card player='no' />
             </div>
 
-            <div className='fixed right-8'>
-                <div id='player-1-cards' className='sticky top-8 object-cover h-max w-24'>
-                    {/* <div id='player-1-cards' className='flex -rotate-90'> */}
-                    {/* Player 1 cards placeholder */}
+            <div id='right-side' className='fixed right-8'>
+                <div id='player-3-cards' className='sticky top-8 object-cover h-max w-24'>
+                    {/* Player 3 cards placeholder */}
                     {[...Array(8)].map((_, index) => (
                         <Card player='3' position={index} key={`player-1-card-${index}`} />
                     ))}
                 </div>
-                <div id='player-1-cards' className='sticky  object-cover h-max w-24'>
-                    {/* <div id='player-1-cards' className='flex -rotate-90'> */}
-                    {/* Player 1 cards placeholder */}
+                <div id='player-4-cards' className='sticky  object-cover h-max w-24'>
+                    {/* Player 4 cards placeholder */}
                     {[...Array(8)].map((_, index) => (
                         <Card player='4' position={index} key={`player-1-card-${index}`} />
                     ))}
