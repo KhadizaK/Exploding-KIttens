@@ -1,0 +1,20 @@
+.player_list {
+    background-color: whitesmoke;
+    padding: 20px;
+    border-radius: 6px;
+    width: 60%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.player_list h2 {
+    font-size: 16;
+    font-weight: bold;
+    color: black;
+    margin-bottom: 10px;
+}
+
+.player_list li:hover {
+    background-color: lightgray;
+    cursor: pointer;
+}

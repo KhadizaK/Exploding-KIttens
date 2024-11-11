@@ -18,13 +18,13 @@ const JoinCreateGameRoom = () => {
             type='text' 
             placeholder='Enter code...' 
             className='rounded p-1' />
-          <Button title='Submit' link='/' />
+          <Button title='Submit' link='/gameroom' />
         </div>
       ) : (
         // Default view with buttons
         <div className='join-create-gameroom-buttons flex flex-col items-center space-y-2'>
           <Button title='Join Game Room' onClick={() => setIsJoiningGame(true)} />
-          <Button title='Create Game Room' link='/' />
+          <Button title='Create Game Room' link='/gameroom' />
         </div>
       )}
     </div>
