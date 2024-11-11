@@ -1,29 +1,41 @@
-import React from 'react';
-import back from '../assets/ek-back-card.png';
+import React from 'react'
+import back from '../assets/ek-back-card.png'
 
-const Card = ({ position }) => {
-    // Apply translation only if position is greater than 0
-    let translateXValue = position > 0 ? -80 * position : 0 // No translation for the first card
+const Card = ({ player, position }) => {
+    let translateXValue = -104 * position
+    const width = window.innerWidth;
 
-    const screenWidth = window.innerWidth
+    if (width <= 768) {
+        translateXValue = -96 * position
+    }
+    else if (width <= 1280) {
+        translateXValue = -116 * position
+    }
 
-    // for smaller screens
-    if (screenWidth <= 768) {
-        translateXValue = translateXValue / 2;
+    let rotationClass = ''
+    let translateHover = ''
+
+    if (player === '1' || player === '2') {
+        rotationClass = 'rotate-90'
+        translateHover = 'hover:translate-x-4'
+    }
+    else if (player === '3' || player === '4') {
+        rotationClass = '-rotate-90'
+        translateHover = 'hover:-translate-x-4'
     }
 
     return (
-        <div 
-            className="Card inline-flex rounded-lg drop-shadow-lg 
-                        hover:cursor-pointer" 
-            style={{
-                transform: `translateX(${translateXValue}px)`,
-                transition: 'transform 0.3s ease', 
-            }}
-        >
-            <img className='rounded object-cover w-max ease-out duration-300
-                            hover:brightness-200  hover:-translate-y-4'
-                            src={back} alt="Card" />
+        <div
+            className={`Card inline-flex rounded-lg drop-shadow-lg`}
+            style={{ transform: `translateY(${translateXValue}px)` }}>
+
+            <img className={`rounded object-cover w-full h-full ease-out duration-300 
+                            max-sm:w-20 hover:brightness-200 hover:cursor-pointer
+                            ${player !== 'no' ? rotationClass : ''}
+                            ${player !== 'no' ? translateHover : 'hover:-translate-y-4'}`}
+                src={back}
+                alt="Back Card"
+            />
         </div>
     );
 };
