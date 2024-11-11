@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JoinCreateGameRoom from './pages/JoinCreateGameRoom';
 import GameRoom from './pages/GameRoom';
+import GameInSession from './pages/GameInSession';
 
 const router = createBrowserRouter([
   { path:'/', element:<App /> },
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
   { path:'/register', element:<RegisterPage /> },
   { path:'/join-create-gameroom', element:<JoinCreateGameRoom /> },
   { path:'/gameroom', element:<GameRoom />},
+  { path:'/room-011', element:<GameInSession />}, // 011 as placeholder for room ID
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

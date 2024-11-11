@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JoinCreateGameRoom from './pages/JoinCreateGameRoom';
 import GameRoom from './pages/GameRoom';
+import GameInSession from './pages/GameInSession';
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/join-create-gameroom" element={<JoinCreateGameRoom />} />
         <Route path="/gameroom" element={<GameRoom />} />
+        <Route path="/room-011" element={<GameInSession />} />  {/* 011 as placeholder for room ID */}
       </Routes>
     </div>
   )
