@@ -8,6 +8,7 @@ module.exports = {
     colors: {
       'ek-bg': '#830308',
       'ek-txt': '#f5a435',
+      'gameroom': '#B9B9B9',
     }
   },
   plugins: [],
