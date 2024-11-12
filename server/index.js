@@ -26,7 +26,9 @@ io.on("connection", (socket) => {
   });
   socket.on('createGame', (data) => {
     const roomID = makeid(6);
-    rooms[roomID] = {players: []};
+    rooms[roomID] = {players: [],
+      deck: generateDeck()
+    };
     console.log(rooms);
     socket.join(roomID);
     socket.emit('gameCreated', rooms[roomID]);
@@ -55,7 +57,7 @@ io.on("connection", (socket) => {
   })
   socket.on('cardPickedUp', (data) => {
     let playerIndex = rooms[data.roomID]["players"].map((room) => {return room.id}).indexOf(data.playerID)
-    rooms[data.roomID]["players"][playerIndex]["hand"].push(getNewCard())
+    rooms[data.roomID]["players"][playerIndex]["hand"].push(getNewCard(data.roomID))
     io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
   })
 });
@@ -75,7 +77,31 @@ function makeid(length) {
 }
 
 // TO DO: getNewCard() will return a new card from the available cards left in the pile
-function getNewCard() {
-  return 1
+function getNewCard(roomID) {
+  let deck = rooms[roomID]["deck"]
+  const randomIndex = Math.floor(Math.random() * deck.length);
+  const chosenCard = deck[randomIndex]
+  rooms[roomID]["deck"].splice(randomIndex, 1)
+  return chosenCard
+}
 
+function generateDeck() {
+  const cards = [
+    { type: "Exploding Kitten", count: 4, id: 0},
+    { type: "Defuse", count: 6, id: 1},
+    { type: "Attack", count: 4, id: 2},
+    { type: "Skip", count: 4, id: 3},
+    { type: "Favor", count: 4, id: 4},
+    { type: "Shuffle", count: 4, id: 5},
+    { type: "See the Future", count: 5, id: 6},
+    { type: "Cat Card", count: 20, id: 6}
+  ];
+
+  const deck = [];
+  cards.forEach(card => {
+    for (let i = 0; i < card.count; i++) {
+      deck.push({id: card.id, type: card.type});
+    }
+  });
+  return deck
 }
