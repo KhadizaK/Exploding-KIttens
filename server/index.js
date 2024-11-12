@@ -35,7 +35,11 @@ io.on("connection", (socket) => {
     if (rooms[data.roomID]) {
       console.log(data);
       socket.join(data.roomID);
-      rooms[data.roomID]["players"].push(socket.id);
+      rooms[data.roomID]["players"].push({
+        id: socket.id,
+        name: data.playerName,
+        hand: [],
+      });
       io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
     }
     else {
@@ -44,6 +48,15 @@ io.on("connection", (socket) => {
   })
   socket.on('startGame', (data) => {
     io.to(data.roomID).emit("startGameClient", data)
+  })
+  socket.on('cardPlaced', (data) => {
+    let cardType = data.card
+    io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
+  })
+  socket.on('cardPickedUp', (data) => {
+    let playerIndex = rooms[data.roomID]["players"].map((room) => {return room.id}).indexOf(data.playerID)
+    rooms[data.roomID]["players"][playerIndex]["hand"].push(getNewCard())
+    io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
   })
 });
 
@@ -59,4 +72,10 @@ function makeid(length) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
+}
+
+// TO DO: getNewCard() will return a new card from the available cards left in the pile
+function getNewCard() {
+  return 1
+
 }
