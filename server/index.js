@@ -25,7 +25,7 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("receive_message", data);
   });
   socket.on('createGame', (data) => {
-    const roomID = makeid(6);
+    const roomID = makeid(3);
     rooms[roomID] = {players: [],
       deck: generateDeck()
     };
@@ -76,12 +76,10 @@ function makeid(length) {
   return result;
 }
 
-// TO DO: getNewCard() will return a new card from the available cards left in the pile
 function getNewCard(roomID) {
   let deck = rooms[roomID]["deck"]
-  const randomIndex = Math.floor(Math.random() * deck.length);
-  const chosenCard = deck[randomIndex]
-  rooms[roomID]["deck"].splice(randomIndex, 1)
+  const chosenCard = deck[0]
+  rooms[roomID]["deck"].splice(0, 1)
   return chosenCard
 }
 
@@ -103,5 +101,13 @@ function generateDeck() {
       deck.push({id: card.id, type: card.type});
     }
   });
-  return deck
+  return shuffleDeck(deck)
+}
+
+function shuffleDeck(deck) {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[randomIndex]] = [deck[randomIndex], deck[i]];
+  }
+  return deck;
 }
