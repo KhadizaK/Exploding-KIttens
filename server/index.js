@@ -28,7 +28,8 @@ io.on("connection", (socket) => {
     const roomID = makeid(3);
     rooms[roomID] = {players: [],
       deck: generateDeck(),
-      turn: 0
+      turn: 0,
+      ranking: []
     };
     console.log(rooms);
     socket.join(roomID);
@@ -87,7 +88,8 @@ function shuffleDeck(deck) {
   return deck;
 }
 
-function getCardIndex(roomID, playerIndex, cardID){
+function getCardIndex(roomID, playerID, cardID){
+  let playerIndex = getPlayerIndex(roomID, playerID)
   return rooms[roomID]["players"][playerIndex]["hand"].map((card) => {return card.id}).indexOf(cardID)
 }
 
@@ -106,6 +108,13 @@ function getNewCard(roomID) {
   const chosenCard = deck[0]
   rooms[roomID]["deck"].splice(0, 1)
   return chosenCard
+}
+
+function playerLoses(roomID, playerID) {
+  let playerIndex = getPlayerIndex(roomID, playerID)
+  let player = rooms[roomID]["players"].splice(playerIndex, 1)[0]
+  delete player.hand;
+  rooms[roomID]["ranking"].unshift(player)
 }
 
 function generateDeck() {
@@ -196,7 +205,7 @@ function twoCatCards(roomID, receivingPlayerID, givingPlayerID, cardIndex){
 function threeCatCards(roomID, receivingPlayerID, givingPlayerID, cardID){
   let receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID)
   let givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID)
-  let cardIndex = getCardIndex(roomID, givingPlayerIndex, cardID)
+  let cardIndex = getCardIndex(roomID, givingPlayerID, cardID)
   if (cardIndex == -1){
     return {error: 'Card not in hand'}
   }
@@ -207,4 +216,16 @@ function threeCatCards(roomID, receivingPlayerID, givingPlayerID, cardID){
 
 function skipCard(roomID){
   return nextTurn(roomID)
+}
+
+function explodingKittenCard(roomID, playerID, newIndex) {
+  let playerIndex = getPlayerIndex(roomID, playerID)
+  let defuseIndex = getCardIndex(roomID, playerID, 1)
+  if (defuseIndex > -1) {
+    rooms[roomID]["players"][playerIndex]["hand"].splice(defuseIndex, 1)
+    placeCardInDeck(roomID, {id: 0, type: "Exploding Kitten"}, newIndex)
+  }
+  else {
+    playerLoses(roomID, rooms[roomID]["players"][playerIndex]["id"])
+  }
 }
