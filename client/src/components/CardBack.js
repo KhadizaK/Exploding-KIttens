@@ -1,7 +1,7 @@
 import React from 'react'
 import back from '../assets/ek-back-card.png'
 
-const Card = ({ player, position }) => {
+const CardBack = ({ player, position }) => {
     let translateXValue = -104 * position
     const width = window.innerWidth;
 
@@ -40,4 +40,4 @@ const Card = ({ player, position }) => {
     );
 };
 
-export default Card;
+export default CardBack;
