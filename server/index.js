@@ -218,12 +218,11 @@ function skipCard(roomID){
   return nextTurn(roomID)
 }
 
-function explodingKittenCard(roomID, playerID, newIndex) {
+function explodingKittenCard(roomID, playerID) {
   let playerIndex = getPlayerIndex(roomID, playerID)
   let defuseIndex = getCardIndex(roomID, playerID, 1)
   if (defuseIndex > -1) {
     rooms[roomID]["players"][playerIndex]["hand"].splice(defuseIndex, 1)
-    placeCardInDeck(roomID, {id: 0, type: "Exploding Kitten"}, newIndex)
   }
   else {
     playerLoses(roomID, rooms[roomID]["players"][playerIndex]["id"])
