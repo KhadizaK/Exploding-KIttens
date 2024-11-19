@@ -40,7 +40,7 @@ io.on("connection", (socket) => {
       rooms[data.roomID]["players"].push({
         id: socket.id,
         name: data.playerName,
-        hand: [],
+        hand: generateHand(data.roomID, 6),
       });
       io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
     }
@@ -56,7 +56,8 @@ io.on("connection", (socket) => {
     io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
   })
   socket.on('cardPickedUp', (data) => {
-    let playerIndex = rooms[data.roomID]["players"].map((room) => {return room.id}).indexOf(data.playerID)
+    let playerIndex = getPlayerIndex(data.roomID, data.playerID)
+    // TODO: Add code to handle if card picked up is an "Exploding Kitten"
     rooms[data.roomID]["players"][playerIndex]["hand"].push(getNewCard(data.roomID))
     io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
   })
@@ -76,6 +77,22 @@ function makeid(length) {
   return result;
 }
 
+function shuffleDeck(deck) {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[randomIndex]] = [deck[randomIndex], deck[i]];
+  }
+  return deck;
+}
+
+function getCardIndex(roomID, playerIndex, cardID){
+  return rooms[roomID]["players"][playerIndex]["hand"].map((card) => {return card.id}).indexOf(cardID)
+}
+
+function getPlayerIndex(roomID, playerID){
+  return rooms[roomID]["players"].map((player) => {return player.id}).indexOf(playerID)
+}
+
 function getNewCard(roomID) {
   let deck = rooms[roomID]["deck"]
   const chosenCard = deck[0]
@@ -88,11 +105,12 @@ function generateDeck() {
     { type: "Exploding Kitten", count: 4, id: 0},
     { type: "Defuse", count: 6, id: 1},
     { type: "Attack", count: 4, id: 2},
-    { type: "Skip", count: 4, id: 3},
-    { type: "Favor", count: 4, id: 4},
-    { type: "Shuffle", count: 4, id: 5},
-    { type: "See the Future", count: 5, id: 6},
-    { type: "Cat Card", count: 20, id: 6}
+    { type: "Nope", count: 4, id: 3},
+    { type: "Skip", count: 4, id: 4},
+    { type: "Favor", count: 4, id: 5},
+    { type: "Shuffle", count: 4, id: 6},
+    { type: "See the Future", count: 5, id: 7},
+    { type: "Cat Card", count: 20, id: 8}
   ];
 
   const deck = [];
@@ -104,10 +122,32 @@ function generateDeck() {
   return shuffleDeck(deck)
 }
 
-function shuffleDeck(deck) {
-  for (let i = deck.length - 1; i > 0; i--) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[randomIndex]] = [deck[randomIndex], deck[i]];
+function placeCardInDeck(roomID, card, index){
+  rooms[roomID]["deck"].splice(index, 0, card)
+}
+
+function generateHand(roomID, size) {
+  function handContainsExpKit(hand) {
+    return hand.filter((card) => {
+      return card.id == 0
+    }).length > 0
   }
-  return deck;
+
+  function replaceAllExpKit(hand) {
+    return hand.map((card) => {
+      if (card.id === 0) {
+        randomIndex = Math.floor(Math.random() * (rooms[roomID]["deck"].length + 1))
+        placeCardInDeck(roomID, card, randomIndex)
+        return getNewCard(roomID)
+      } else {
+        return card
+      }
+    })
+  }
+
+  let hand = rooms[roomID]["deck"].splice(0, size)
+  while (handContainsExpKit(hand)) {
+    hand = replaceAllExpKit(hand)
+  }
+  return hand
 }
