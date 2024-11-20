@@ -5,10 +5,12 @@ const CardBack = ({ player, position }) => {
   let translateXValue = -24 * position;
   const width = window.innerWidth;
 
-  if (width <= 768) {
-    translateXValue = -32 * position;
-  } else if (width <= 1280) {
-    translateXValue = -48 * position;
+  if (width <= 1024) {
+  translateXValue = -24 * position;
+  } else if (width <= 768) {
+    translateXValue = -8 * position;
+  } else if (width <= 640) {
+    translateXValue = -4 * position;
   }
 
   let rotationAngle = 0;
@@ -33,7 +35,7 @@ const CardBack = ({ player, position }) => {
   return (
     <div
       id="card-back"
-      className={`Card absolute rounded-lg drop-shadow-lg
+      className={`Card absolute rounded-lg drop-shadow-lg 
                   ${player !== 'drawing_deck' || 'discarded_deck' ? orient : 'flex justify-center items-center'}`}
       style={{
         transform: `translateY(${translateXValue}px) rotate(${rotationAngle}deg)`,
@@ -45,8 +47,10 @@ const CardBack = ({ player, position }) => {
       }}
     >
       <img
-        className={`rounded object-cover w-28 h-max ease-in-out duration-200 
-                    max-sm:w-20 hover:brightness-200 hover:cursor-pointer hover:-translate-y-4
+        className={`rounded object-cover ease-in-out duration-200 
+                    w-24 max-md:w-12 max-lg:w-16 
+                    h-max
+                    hover:brightness-200 hover:cursor-pointer hover:-translate-y-4
                    `}
         src={back}
         alt="Back Card"

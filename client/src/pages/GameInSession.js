@@ -27,7 +27,7 @@ const GameInSession = () => {
       {/* Discarded Deck*/}
       {[...Array(2)].map((_, index) => (
         <CardFront playerCard={0}
-          deck={['attack', 'defuse']} totalCards={[].length}
+          deck={['attack', 'defuse']} totalCards={['attack', 'defuse'].length}
           position={index} key={`your-card-${index}`}
         />
       ))}
