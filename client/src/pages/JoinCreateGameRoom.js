@@ -18,7 +18,7 @@ const JoinCreateGameRoom = () => {
             type='text' 
             placeholder='Enter code...' 
             className='rounded p-1' />
-          <Button title='Submit' link='/gameroom' />
+          <Button title='Submit' link='/gameroomlist' />
         </div>
       ) : (
         // Default view with buttons
