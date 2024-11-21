@@ -56,9 +56,10 @@ io.on("connection", (socket) => {
     io.to(data.roomID).emit("startGameClient", data)
   })
   socket.on('cardPlaced', (data) => {
+    let nopeResponse;
     // Check if two/three 'Cat Cards' were placed
     if (data.cards) {
-      let nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
+      nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
       if (nopeResponse.response === 1) {
         return;
       }
@@ -83,7 +84,7 @@ io.on("connection", (socket) => {
     let card = data.card
     switch (card.id) {
       case 2: // Attack
-        let nopeResponse = nopeCard(socket, data.roomID, data.playerID)
+        nopeResponse = nopeCard(socket, data.roomID, data.playerID)
         if (nopeResponse.response === 1) {
           break;
         }
@@ -106,7 +107,7 @@ io.on("connection", (socket) => {
         if (nopeResponse.response === 1) {
           break;
         }
-        let card = favorCard(data.roomID, data.receivingPlayerID, data.givingPlayerID, data.cardIndex).at(-1)
+        let card = favorCard(data.roomID, data.receivingPlayerID, data.givingPlayerID).at(-1)
         io.to(data.roomID).emit('giveCard', {
           from: data.givingPlayerID,
           to: data.receivingPlayerID,
@@ -282,9 +283,24 @@ function seeTheFutureCard(roomID){
   return deck.slice(0, end)
 }
 
-function favorCard(roomID, receivingPlayerID, givingPlayerID, cardIndex) {
+function favorCard(socket, roomID, receivingPlayerID, givingPlayerID) {
+  function getCardIndexFromPlayer(socket, roomID, playerID) {
+    return new Promise((resolve, reject) => {
+      io.to(playerID).emit('getResponseForFavor')
+
+      socket.once('receiveResponseForFavor', (data) => {
+        if (data) {
+          resolve(data.cardIndex);
+        } else {
+          reject(new Error('No response from client'));
+        }
+      });
+    });
+  }
+
   let receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID)
   let givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID)
+  let cardIndex = await getCardIndexFromPlayer(socket, roomID, givingPlayerID)
   if (cardIndex >= rooms[roomID]["players"][givingPlayerIndex]["hand"].length){
     return {error: 'Card not in hand'}
   }
@@ -352,7 +368,7 @@ async function nopeCard(socket, roomID, playerID) {
 
   let players = rooms[roomID]["players"]
   if (playerID) {
-    players = players[getPlayerIndex(roomID, playerID)]
+    players = [players[getPlayerIndex(roomID, playerID)]]
   }
   let playersWithNopes = players.filter((player) => {
     return getCardIndex(roomID, player.id, 3) > -1
