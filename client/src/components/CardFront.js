@@ -48,11 +48,11 @@ const CardFront = ({ playerCard, deck = [], totalCards = 0, position }) => {
 
   return (
     <div
-      className={`Card absolute h-fit m-auto inline-flex rounded-lg drop-shadow-lg 
-               max-md:w-24
-              ${isCenterCard ? 'w-24 max-sm:w-12 -translate-y-24 max-sm:-translate-y-12 top-1/2 left-1/2 transform' 
-                              : 'w-28 max-sm:w-16 bottom-4 right-0 left-0'}
-              `}
+      className={`Card absolute  m-auto inline-flex rounded-full drop-shadow-lg 
+                w-fit
+              ${isCenterCard ? 'h-32 max-sm:h-24 -translate-y-24 max-sm:-translate-y-12 top-1/2 left-1/2 transform'
+          : 'h-48 max-sm:h-32 bottom-4 right-0 left-0'}
+                `}
       style={{
         transform: isCenterCard
           ? ``
@@ -61,10 +61,11 @@ const CardFront = ({ playerCard, deck = [], totalCards = 0, position }) => {
     >
       <img
         className={`rounded-lg object-cover drop-shadow-lg
-                hover:brightness-90 hover:cursor-pointer
-                ${isCenterCard ? 'hover:-translate-y-4' : 'hover:-translate-y-12'}
-                ease-out duration-300 
-                `}
+                    hover:brightness-90
+                    hover:cursor-pointer
+                    ${isCenterCard ? 'hover:-translate-y-4' : 'hover:-translate-y-12'}
+                    ease-out duration-300 
+                  `}
         src={cardImage}
         alt={card_type ? card_type.charAt(0).toUpperCase() + card_type.slice(1) : 'Card'}
       />
