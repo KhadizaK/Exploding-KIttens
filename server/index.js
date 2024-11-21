@@ -59,7 +59,7 @@ io.on("connection", (socket) => {
     // Check if two/three 'Cat Cards' were placed
     if (data.cards) {
       let nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
-      if (nopeResponse === 1) {
+      if (nopeResponse.response === 1) {
         return;
       }
       let length = data.cards.length
@@ -84,7 +84,7 @@ io.on("connection", (socket) => {
     switch (card.id) {
       case 2: // Attack
         let nopeResponse = nopeCard(socket, data.roomID, data.playerID)
-        if (nopeResponse === 1) {
+        if (nopeResponse.response === 1) {
           break;
         }
         let cards = attackCard(data.roomID, data.playerID).slice(-2)
@@ -96,14 +96,14 @@ io.on("connection", (socket) => {
         break;
       case 4: // Skip
         nopeResponse = nopeCard(socket, data.roomID)
-        if (nopeResponse === 1) {
+        if (nopeResponse.response === 1) {
           break;
         }
         skipCard(data.roomID)
         break;
       case 5: // Favor
         nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
-        if (nopeResponse === 1) {
+        if (nopeResponse.response === 1) {
           break;
         }
         let card = favorCard(data.roomID, data.receivingPlayerID, data.givingPlayerID, data.cardIndex).at(-1)
@@ -115,14 +115,14 @@ io.on("connection", (socket) => {
         break;
       case 6: // Shuffle
         nopeResponse = nopeCard(socket, data.roomID)
-        if (nopeResponse === 1) {
+        if (nopeResponse.response === 1) {
           break;
         }
         shuffleCard(data.roomID)
         break;
       case 7: // See the Future
         nopeResponse = nopeCard(socket, data.roomID)
-        if (nopeResponse === 1) {
+        if (nopeResponse.response === 1) {
           break;
         }
         let future = seeTheFutureCard(data.roomID)
@@ -189,8 +189,9 @@ function getPlayerIndex(roomID, playerID){
 }
 
 function nextTurn(roomID){
-  numberOfPlayers = rooms[roomID]["players"].length
+  let numberOfPlayers = rooms[roomID]["players"].length
   rooms[roomID]["turn"] = (rooms[roomID]["turn"] + 1) % numberOfPlayers
+  io.to(roomID).emit('nextTurn')
   return rooms[roomID]["turn"]
 }
 
@@ -206,6 +207,15 @@ function playerLoses(roomID, playerID) {
   let player = rooms[roomID]["players"].splice(playerIndex, 1)[0]
   delete player.hand;
   rooms[roomID]["ranking"].unshift(player)
+  checkGameOver(roomID)
+}
+
+function checkGameOver(roomID) {
+  let numberOfPlayers = rooms[roomID]["players"].length
+  if (numberOfPlayers === 1) {
+    let winner = rooms[roomID]["players"][0]["id"]
+    io.to(roomID).emit('gameOver', {winner: winner})
+  }
 }
 
 function generateDeck() {
@@ -334,7 +344,6 @@ async function nopeCard(socket, roomID, playerID) {
           reject(new Error('No response from client'));
         }
       });
-
       setTimeout(() => {
         resolve(0);
       }, 10000);
@@ -352,8 +361,8 @@ async function nopeCard(socket, roomID, playerID) {
   for (let player of playersWithNopes) {
     response = await getResponseForNope(socket, player.id)
     if (response === 1) {
-      break
+      return {playerID: player.id, response: response}
     }
   }
-  return response
+  return {response: response}
 }
