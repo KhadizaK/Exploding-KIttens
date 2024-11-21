@@ -5,12 +5,10 @@ const CardBack = ({ player, position }) => {
   let translateXValue = -24 * position;
   const width = window.innerWidth;
 
-  if (width <= 1024) {
-    translateXValue = -24 * position;
+  if (width <= 640) {
+    translateXValue = -16 * position;
   } else if (width <= 768) {
-    translateXValue = -8 * position;
-  } else if (width <= 640) {
-    translateXValue = -4 * position;
+    translateXValue = -20 * position;
   }
 
   let rotationAngle = 0;
@@ -38,7 +36,7 @@ const CardBack = ({ player, position }) => {
       className={`Card absolute drop-shadow-lg border-white rounded-full
                   h-fit
                   ${player !== 'drawing_deck' ? orient : 'flex justify-center items-center'}
-                  ${player !== 'drawing_deck' ? 'w-24' : 'w-20'}
+                  ${player !== 'drawing_deck' ? 'w-24 max-sm:w-8' : 'w-20 max-sm:w-16'}
                   `}
       style={{
         transform: `translateY(${translateXValue}px) rotate(${rotationAngle}deg)`,
