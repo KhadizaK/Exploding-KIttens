@@ -283,7 +283,7 @@ function seeTheFutureCard(roomID){
   return deck.slice(0, end)
 }
 
-function favorCard(socket, roomID, receivingPlayerID, givingPlayerID) {
+async function favorCard(socket, roomID, receivingPlayerID, givingPlayerID) {
   function getCardIndexFromPlayer(socket, roomID, playerID) {
     return new Promise((resolve, reject) => {
       io.to(playerID).emit('getResponseForFavor')
