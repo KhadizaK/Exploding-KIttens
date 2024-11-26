@@ -1,10 +1,19 @@
-import React from 'react'
+import React, { useState } from "react";
 import CardBack from '../components/CardBack'
 import './GameInSession.css'
 import CardFront from '../components/CardFront'
 import HighlightTurn from '../components/HighlightTurn'
+import GameMenu from '../components/GameMenu'
+import Button from '../components/Button';
 
 const GameInSession = () => {
+  const [Visible, setVisible] = useState(false);
+  const openMenu = () => {
+    setVisible(true);
+  };
+  const resumeGame= () => {
+    setVisible(false);
+  };
 
   var player_1_deck = ['defuse', 'attack', 'nope', 'mercat',
     'knight_cat', 'reveal_the_future', 'shuffle', 'troll_cat']
@@ -13,6 +22,10 @@ const GameInSession = () => {
   return (
     <div className='GameInSession bg-gameroom h-screen
                     flex items-center'>
+      <div className="absolute top-4 right-4">
+        <Button title='Pause' onClick={openMenu} />
+      </div>
+      <GameMenu Visible={Visible} Resume={resumeGame} />
 
       <HighlightTurn />
 

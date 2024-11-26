@@ -1,0 +1,59 @@
+.dark_background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.725);
+    z-index: 10;
+}
+
+.game_menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: darkred;
+    border-color: #3C3A3B;
+    border-width: 5px;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+  
+.game_menu button {
+    padding: 0.75rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.game_menu .resume_button {
+    background-color: #4E4C4D;
+    color: #EC3631;
+}
+
+.game_menu .resume_button:hover {
+    background-color: #3C3A3B;
+}
+
+.game_menu .quit_button {
+    background-color: #4E4C4D;
+    color: #EC3631;
+}
+
+.game_menu .quit_button:hover {
+    background-color: #3C3A3B;
+}
+
+.game_menu .setting_button {
+    background-color: #4E4C4D;
+    color: #EC3631;
+}
+
+.game_menu .setting_button:hover {
+    background-color: #3C3A3B;
+}
