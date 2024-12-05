@@ -27,7 +27,9 @@ io.on("connection", (socket) => {
   socket.on('createGame', (data) => {
     const roomID = makeid(3);
     rooms[roomID] = {players: [],
-      deck: generateDeck()
+      deck: generateDeck(),
+      turn: 0,
+      ranking: []
     };
     console.log(rooms);
     socket.join(roomID);
@@ -59,6 +61,7 @@ io.on("connection", (socket) => {
     let playerIndex = getPlayerIndex(data.roomID, data.playerID)
     // TODO: Add code to handle if card picked up is an "Exploding Kitten"
     rooms[data.roomID]["players"][playerIndex]["hand"].push(getNewCard(data.roomID))
+    nextTurn(data.roomID)
     io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
   })
 });
@@ -85,7 +88,8 @@ function shuffleDeck(deck) {
   return deck;
 }
 
-function getCardIndex(roomID, playerIndex, cardID){
+function getCardIndex(roomID, playerID, cardID){
+  let playerIndex = getPlayerIndex(roomID, playerID)
   return rooms[roomID]["players"][playerIndex]["hand"].map((card) => {return card.id}).indexOf(cardID)
 }
 
@@ -93,11 +97,24 @@ function getPlayerIndex(roomID, playerID){
   return rooms[roomID]["players"].map((player) => {return player.id}).indexOf(playerID)
 }
 
+function nextTurn(roomID){
+  numberOfPlayers = rooms[roomID]["players"].length
+  rooms[roomID]["turn"] = (rooms[roomID]["turn"] + 1) % numberOfPlayers
+  return rooms[roomID]["turn"]
+}
+
 function getNewCard(roomID) {
   let deck = rooms[roomID]["deck"]
   const chosenCard = deck[0]
   rooms[roomID]["deck"].splice(0, 1)
   return chosenCard
+}
+
+function playerLoses(roomID, playerID) {
+  let playerIndex = getPlayerIndex(roomID, playerID)
+  let player = rooms[roomID]["players"].splice(playerIndex, 1)[0]
+  delete player.hand;
+  rooms[roomID]["ranking"].unshift(player)
 }
 
 function generateDeck() {
@@ -179,4 +196,35 @@ function attackCard(roomID, playerID) {
   let playerIndex = getPlayerIndex(roomID, playerID)
   rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID), getNewCard(roomID))
   return rooms[roomID]["players"][playerIndex]["hand"]
+}
+
+function twoCatCards(roomID, receivingPlayerID, givingPlayerID, cardIndex){
+  return favorCard(roomID, receivingPlayerID, givingPlayerID, cardIndex)
+}
+
+function threeCatCards(roomID, receivingPlayerID, givingPlayerID, cardID){
+  let receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID)
+  let givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID)
+  let cardIndex = getCardIndex(roomID, givingPlayerID, cardID)
+  if (cardIndex == -1){
+    return {error: 'Card not in hand'}
+  }
+  let card = rooms[roomID]["players"][givingPlayerIndex]["hand"].splice(cardIndex, 1)[0]
+  rooms[roomID]["players"][receivingPlayerIndex]["hand"].push(card)
+  return rooms[roomID]["players"][receivingPlayerIndex]["hand"]
+}
+
+function skipCard(roomID){
+  return nextTurn(roomID)
+}
+
+function explodingKittenCard(roomID, playerID) {
+  let playerIndex = getPlayerIndex(roomID, playerID)
+  let defuseIndex = getCardIndex(roomID, playerID, 1)
+  if (defuseIndex > -1) {
+    rooms[roomID]["players"][playerIndex]["hand"].splice(defuseIndex, 1)
+  }
+  else {
+    playerLoses(roomID, rooms[roomID]["players"][playerIndex]["id"])
+  }
 }
