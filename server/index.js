@@ -26,7 +26,9 @@ io.on("connection", (socket) => {
   });
   socket.on('createGame', (data) => {
     const roomID = makeid(3);
-    rooms[roomID] = {players: [],
+    rooms[roomID] = {
+      roomID: roomID,
+      players: [],
       deck: generateDeck(),
       turn: 0,
       ranking: []
@@ -54,15 +56,105 @@ io.on("connection", (socket) => {
     io.to(data.roomID).emit("startGameClient", data)
   })
   socket.on('cardPlaced', (data) => {
-    let cardType = data.card
-    io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
+    let nopeResponse;
+    // Check if two/three 'Cat Cards' were placed
+    if (data.cards) {
+      nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
+      if (nopeResponse.response === 1) {
+        return;
+      }
+      let length = data.cards.length
+      if (length == 2) {
+        let card = twoCatCards(data.roomID, data.receivingPlayerID, data.givingPlayerID, data.cardIndex).at(-1)
+        io.to(data.roomID).emit('giveCard', {
+          from: data.givingPlayerID,
+          to: data.receivingPlayerID,
+          card: card
+        })
+      }
+      else {
+        let card = threeCatCards(data.roomID, data.receivingPlayerID, data.givingPlayerID, data.cardID).at(-1)
+        io.to(data.roomID).emit('giveCard', {
+          from: data.givingPlayerID,
+          to: data.receivingPlayerID, card: card
+        })
+      }
+      return;
+    }
+    let card = data.card
+    switch (card.id) {
+      case 2: // Attack
+        nopeResponse = nopeCard(socket, data.roomID, data.playerID)
+        if (nopeResponse.response === 1) {
+          break;
+        }
+        let cards = attackCard(data.roomID, data.playerID).slice(-2)
+        io.to(data.roomID).emit('giveCards', {
+          from: data.givingPlayerID,
+          to: data.receivingPlayerID,
+          cards: cards
+        })
+        break;
+      case 4: // Skip
+        nopeResponse = nopeCard(socket, data.roomID)
+        if (nopeResponse.response === 1) {
+          break;
+        }
+        skipCard(data.roomID)
+        break;
+      case 5: // Favor
+        nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
+        if (nopeResponse.response === 1) {
+          break;
+        }
+        let card = favorCard(data.roomID, data.receivingPlayerID, data.givingPlayerID).at(-1)
+        io.to(data.roomID).emit('giveCard', {
+          from: data.givingPlayerID,
+          to: data.receivingPlayerID,
+          card: card
+        })
+        break;
+      case 6: // Shuffle
+        nopeResponse = nopeCard(socket, data.roomID)
+        if (nopeResponse.response === 1) {
+          break;
+        }
+        shuffleCard(data.roomID)
+        break;
+      case 7: // See the Future
+        nopeResponse = nopeCard(socket, data.roomID)
+        if (nopeResponse.response === 1) {
+          break;
+        }
+        let future = seeTheFutureCard(data.roomID)
+        io.to(data.roomID).emit('seeTheFuture', {
+          playerID: data.playerID,
+          future: future
+        })
+        break;
+    }
   })
   socket.on('cardPickedUp', (data) => {
     let playerIndex = getPlayerIndex(data.roomID, data.playerID)
-    // TODO: Add code to handle if card picked up is an "Exploding Kitten"
-    rooms[data.roomID]["players"][playerIndex]["hand"].push(getNewCard(data.roomID))
-    nextTurn(data.roomID)
-    io.to(data.roomID).emit("updateGameBoard", rooms[data.roomID])
+    let card = getNewCard(data.roomID)
+    if (card.id === 0) {
+      let response = explodingKittenCard(data.roomID, data.playerID)
+      if (response === 1){
+        io.to(data.roomID).emit('placeExplodingKitten', {roomID: data.roomID, playerID: data.playerID})
+      }
+      else {
+        io.to(data.roomID).emit('playerLost', {playerID: data.playerID})
+      }
+    }
+    else {
+      rooms[data.roomID]["players"][playerIndex]["hand"].push(card)
+      nextTurn(data.roomID)
+      io.to(data.roomID).emit('giveCard', {
+        from: 'deck',
+        to: data.playerID,
+        card: card
+      })
+    }
   })
 });
 
@@ -98,8 +190,9 @@ function getPlayerIndex(roomID, playerID){
 }
 
 function nextTurn(roomID){
-  numberOfPlayers = rooms[roomID]["players"].length
+  let numberOfPlayers = rooms[roomID]["players"].length
   rooms[roomID]["turn"] = (rooms[roomID]["turn"] + 1) % numberOfPlayers
+  io.to(roomID).emit('nextTurn')
   return rooms[roomID]["turn"]
 }
 
@@ -115,6 +208,15 @@ function playerLoses(roomID, playerID) {
   let player = rooms[roomID]["players"].splice(playerIndex, 1)[0]
   delete player.hand;
   rooms[roomID]["ranking"].unshift(player)
+  checkGameOver(roomID)
+}
+
+function checkGameOver(roomID) {
+  let numberOfPlayers = rooms[roomID]["players"].length
+  if (numberOfPlayers === 1) {
+    let winner = rooms[roomID]["players"][0]["id"]
+    io.to(roomID).emit('gameOver', {winner: winner})
+  }
 }
 
 function generateDeck() {
@@ -181,9 +283,24 @@ function seeTheFutureCard(roomID){
   return deck.slice(0, end)
 }
 
-function favorCard(roomID, receivingPlayerID, givingPlayerID, cardIndex) {
+async function favorCard(socket, roomID, receivingPlayerID, givingPlayerID) {
+  function getCardIndexFromPlayer(socket, roomID, playerID) {
+    return new Promise((resolve, reject) => {
+      io.to(playerID).emit('getResponseForFavor')
+
+      socket.once('receiveResponseForFavor', (data) => {
+        if (data) {
+          resolve(data.cardIndex);
+        } else {
+          reject(new Error('No response from client'));
+        }
+      });
+    });
+  }
+
   let receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID)
   let givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID)
+  let cardIndex = await getCardIndexFromPlayer(socket, roomID, givingPlayerID)
   if (cardIndex >= rooms[roomID]["players"][givingPlayerIndex]["hand"].length){
     return {error: 'Card not in hand'}
   }
@@ -223,8 +340,45 @@ function explodingKittenCard(roomID, playerID) {
   let defuseIndex = getCardIndex(roomID, playerID, 1)
   if (defuseIndex > -1) {
     rooms[roomID]["players"][playerIndex]["hand"].splice(defuseIndex, 1)
+    return 1
   }
   else {
     playerLoses(roomID, rooms[roomID]["players"][playerIndex]["id"])
+    return 2
   }
+}
+
+async function nopeCard(socket, roomID, playerID) {
+  function getResponseForNope(socket, playerID) {
+    return new Promise((resolve, reject) => {
+      io.to(playerID).emit('getResponseForNope')
+
+      socket.once('receiveResponseForNope', (data) => {
+        if (data) {
+          resolve(data.response);
+        } else {
+          reject(new Error('No response from client'));
+        }
+      });
+      setTimeout(() => {
+        resolve(0);
+      }, 10000);
+    });
+  }
+
+  let players = rooms[roomID]["players"]
+  if (playerID) {
+    players = [players[getPlayerIndex(roomID, playerID)]]
+  }
+  let playersWithNopes = players.filter((player) => {
+    return getCardIndex(roomID, player.id, 3) > -1
+  })
+  let response = 0
+  for (let player of playersWithNopes) {
+    response = await getResponseForNope(socket, player.id)
+    if (response === 1) {
+      return {playerID: player.id, response: response}
+    }
+  }
+  return {response: response}
 }
