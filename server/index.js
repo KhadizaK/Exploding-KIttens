@@ -151,3 +151,32 @@ function generateHand(roomID, size) {
   }
   return hand
 }
+
+function shuffleCard(roomID){
+  let deck = rooms[roomID]["deck"]
+  rooms[roomID]["deck"] = shuffleDeck(deck)
+  return rooms[roomID]["deck"]
+}
+
+function seeTheFutureCard(roomID){
+  let deck = rooms[roomID]["deck"]
+  end = Math.min(3, deck.length)
+  return deck.slice(0, end)
+}
+
+function favorCard(roomID, receivingPlayerID, givingPlayerID, cardIndex) {
+  let receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID)
+  let givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID)
+  if (cardIndex >= rooms[roomID]["players"][givingPlayerIndex]["hand"].length){
+    return {error: 'Card not in hand'}
+  }
+  let card = rooms[roomID]["players"][givingPlayerIndex]["hand"].splice(cardIndex, 1)[0]
+  rooms[roomID]["players"][receivingPlayerIndex]["hand"].push(card)
+  return rooms[roomID]["players"][receivingPlayerIndex]["hand"]
+}
+
+function attackCard(roomID, playerID) {
+  let playerIndex = getPlayerIndex(roomID, playerID)
+  rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID), getNewCard(roomID))
+  return rooms[roomID]["players"][playerIndex]["hand"]
+}
