@@ -1,9 +1,14 @@
+// Dependencies
 const express = require("express");
 const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const { Socket } = require("dgram");
+const Database = require('better-sqlite3');
+const fs = require('fs');
+
+// Run server
 app.use(cors());
 
 let rooms = {}
@@ -66,6 +71,49 @@ server.listen(3001, () => {
   console.log("SERVER IS RUNNING  ");
 });
 
+// Database
+const dbFileName = 'kittens.db';
+if (!fs.existsSync(dbFileName)) {
+  console.log('Database does not exist. Creating a new one...');
+  
+  const db = new Database(dbFileName);
+  db.exec('PRAGMA foreign_keys = ON;');
+
+  // Create a tables
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      playerID INTEGER PRIMARY KEY,
+      username VARCHAR(64),
+      password VARCHAR(64),
+      screenname VARCHAR(64)
+    )
+  `);
+
+  db.exec(`
+  CREATE TABLE IF NOT EXISTS history (
+    gameID INTEGER PRIMARY KEY,
+    time DATETIME,
+    player1 INTEGER,
+    player2 INTEGER,
+    player3 INTEGER,
+    player4 INTEGER,
+    player5 INTEGER,
+    winner INTEGER,
+    FOREIGN KEY (player1) REFERENCES users(playerID),
+    FOREIGN KEY (player2) REFERENCES users(playerID),
+    FOREIGN KEY (player3) REFERENCES users(playerID),
+    FOREIGN KEY (player4) REFERENCES users(playerID),
+    FOREIGN KEY (player5) REFERENCES users(playerID),
+    FOREIGN KEY (winner) REFERENCES users(playerID)
+    )
+  `);
+
+  console.log('Database created and tables initialized.');
+} else {
+  console.log('Database already exists.');
+}
+
+// Server Functions
 function makeid(length) {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -111,3 +159,6 @@ function shuffleDeck(deck) {
   }
   return deck;
 }
+
+// Database Functions
+
