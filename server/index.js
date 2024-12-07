@@ -162,3 +162,33 @@ function shuffleDeck(deck) {
 
 // Database Functions
 
+function addUser(username, password, screenname) {
+  // Generate a new playerID
+  const getMaxIDStmt = db.prepare('SELECT MAX(playerID) AS maxID FROM users');
+  const maxIDRow = getMaxIDStmt.get();
+  const newPlayerID = (maxIDRow?.maxID || 0) + 1; // Start from 1 if table is empty
+
+  // Insert the new user
+  const stmt = db.prepare(`
+    INSERT INTO users (playerID, username, password, screenname)
+    VALUES (?, ?, ?, ?)
+  `);
+  try {
+    const result = stmt.run(newPlayerID, username, password, screenname);
+    console.log('User added with playerID:', newPlayerID);
+    return newPlayerID;
+  } catch (error) {
+    console.error('Error adding user:', error.message);
+    throw error;
+  }
+}
+
+function getUserByUsername(username) {
+  const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
+  return stmt.get(username);
+}
+
+function getUsers() {
+  const stmt = db.prepare('SELECT * FROM users');
+  return stmt.all();
+}
