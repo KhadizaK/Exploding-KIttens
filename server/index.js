@@ -192,3 +192,47 @@ function getUsers() {
   const stmt = db.prepare('SELECT * FROM users');
   return stmt.all();
 }
+
+function logGame(time, players, winner) {
+  const stmt = db.prepare(`
+    INSERT INTO history (time, player1, player2, player3, player4, player5, winner)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  try {
+    const result = stmt.run(
+      time,
+      players[0] || null,
+      players[1] || null,
+      players[2] || null,
+      players[3] || null,
+      players[4] || null,
+      winner
+    );
+    console.log('Game logged:', result.lastInsertRowid);
+    return result.lastInsertRowid;
+  } catch (error) {
+    console.error('Error logging game:', error.message);
+    throw error;
+  }
+}
+
+function getGameHistory() {
+  const stmt = db.prepare(`
+    SELECT h.gameID, h.time, 
+           u1.screenname AS player1,
+           u2.screenname AS player2,
+           u3.screenname AS player3,
+           u4.screenname AS player4,
+           u5.screenname AS player5,
+           uw.screenname AS winner
+    FROM history h
+    LEFT JOIN users u1 ON h.player1 = u1.playerID
+    LEFT JOIN users u2 ON h.player2 = u2.playerID
+    LEFT JOIN users u3 ON h.player3 = u3.playerID
+    LEFT JOIN users u4 ON h.player4 = u4.playerID
+    LEFT JOIN users u5 ON h.player5 = u5.playerID
+    LEFT JOIN users uw ON h.winner = uw.playerID
+    ORDER BY h.time DESC
+  `);
+  return stmt.all();
+}
