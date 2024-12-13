@@ -18,13 +18,14 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
+
   console.log(`User Connected: ${socket.id}`);
 
   socket.on("send_message", (data) => {
     console.log(data);
     socket.broadcast.emit("receive_message", data);
   });
-  socket.on('createGame', (data) => {
+  socket.on('createGame', () => {
     const roomID = makeid(3);
     rooms[roomID] = {
       roomID: roomID,
@@ -35,7 +36,7 @@ io.on("connection", (socket) => {
     };
     console.log(rooms);
     socket.join(roomID);
-    socket.emit('gameCreated', rooms[roomID]);
+    io.to(roomID).emit('gameCreated', rooms[roomID]);
   });
   socket.on('joinGame', (data) => {
     if (rooms[data.roomID]) {
@@ -90,8 +91,8 @@ io.on("connection", (socket) => {
         }
         let cards = attackCard(data.roomID, data.playerID).slice(-2)
         io.to(data.roomID).emit('giveCards', {
-          from: data.givingPlayerID,
-          to: data.receivingPlayerID,
+          from: "deck",
+          to: data.playerID,
           cards: cards
         })
         break;
