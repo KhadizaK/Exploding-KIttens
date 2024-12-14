@@ -4,15 +4,16 @@ import attack from '../assets/cards/ATTACK.png';
 import nope from '../assets/cards/NOPE.png';
 import exploding_kitten from '../assets/cards/EXPLODING_KITTEN.png';
 import favor from '../assets/cards/FAVOR.png';
+import skip from '../assets/cards/SKIP.png';
 import feral_cat from '../assets/cards/FERAL_CAT.png';
 import horse_cat from '../assets/cards/HORSE_CAT.png';
 import knight_cat from '../assets/cards/KNIGHT_CAT.png';
 import mercat from '../assets/cards/MERCAT.png';
-import reveal_the_future from '../assets/cards/REVEAL_THE_FUTURE.png';
+import see_the_future from '../assets/cards/SEE_THE_FUTURE.png';
 import shuffle from '../assets/cards/SHUFFLE.png';
-import troll_cat from '../assets/cards/TROLL_CAT.png';
+import cat_card from '../assets/cards/CAT_CARD.png';
 
-const CardFront = ({ playerCard, deck = [], totalCards = 0, position }) => {
+const CardFront = ({ playerCard, deck = [], totalCards = 0, position, onClick }) => {
   const cardWidth = 64;
   const screenWidth = window.innerWidth;
 
@@ -38,9 +39,10 @@ const CardFront = ({ playerCard, deck = [], totalCards = 0, position }) => {
     horse_cat,
     knight_cat,
     mercat,
-    reveal_the_future,
+    see_the_future,
     shuffle,
-    troll_cat,
+    cat_card,
+    skip
   };
   // TODO: assign card type action/effect
 
@@ -58,6 +60,7 @@ const CardFront = ({ playerCard, deck = [], totalCards = 0, position }) => {
           ? ``
           : `translateX(${translateXValue}px)`,
       }}
+      onClick={onClick}
     >
       <img
         className={`rounded-lg object-cover drop-shadow-lg

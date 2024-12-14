@@ -1,7 +1,7 @@
 import React from 'react';
 import back from '../assets/cards/ek-back-card.png';
 
-const CardBack = ({ player, position }) => {
+const CardBack = ({ player, position, onClick }) => {
   let translateXValue = -24 * position;
   const width = window.innerWidth;
 
@@ -14,14 +14,14 @@ const CardBack = ({ player, position }) => {
   let rotationAngle = 0;
   let orient = '';
 
-  if (player === '2' || player === '3') {
+  if (player === '1' || player === '2') {
     rotationAngle = 90;
     if (player === '2') {
       orient = 'left-8 bottom-16';
     } else {
       orient = 'left-8 top-48';
     }
-  } else if (player === '4' || player === '5') {
+  } else if (player === '3' || player === '4') {
     rotationAngle = -90;
     if (player === '4') {
       orient = 'right-8 bottom-16';
@@ -46,6 +46,7 @@ const CardBack = ({ player, position }) => {
           transform: `translate(-120%, -80%)`,
         }),
       }}
+      onClick={onClick}
     >
       <img
         className={`rounded object-cover ease-in-out duration-200 

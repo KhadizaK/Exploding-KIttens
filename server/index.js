@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
       ranking: [],
       hostId: socket.id
     };
-    console.log(rooms);
+    console.log(JSON.stringify(rooms));
     socket.join(roomID);
     io.to(roomID).emit('gameCreated', rooms[roomID]);
   });
@@ -43,10 +43,11 @@ io.on("connection", (socket) => {
     if (rooms[data.roomID]) {
       console.log(data);
       socket.join(data.roomID);
+      socket.join(data.id)
       rooms[data.roomID]["players"].push({
-        id: socket.id,
+        id: data.id,
         name: data.playerName,
-        hand: generateHand(data.roomID, 6),
+        hand: generateHand(data.roomID, 8),
       });
       io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
     }
@@ -54,9 +55,19 @@ io.on("connection", (socket) => {
       socket.emit("errorDialogue", {text: "This room doesn't exist"})
     }
   })
+  socket.on('rejoinGame', (data) => {
+    if (rooms[data.roomID]) {
+      playerIDs = rooms[data.roomID]["players"].map((player) => {return player.id})
+      if (playerIDs.includes(data.playerID))
+      {
+        socket.join(data.roomID)
+        socket.join(data.playerID)
+      }
+    }
+  })
   socket.on('getRoomState', (data) => {
     if (rooms[data.roomID]) {
-      socket.emit('updatePlayers', rooms[data.roomID]);
+      io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
     }
   });
   socket.on('startGame', (data) => {

@@ -11,19 +11,22 @@ const JoinCreateGameRoom = () => {
     const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || '');
     const [errorMessage, setErrorMessage] = useState('');
 
+    localStorage.setItem('id', socket.id);
+
     useEffect(() => {
         socket.on("gameCreated", (roomData) => {
             console.log("Room created:", roomData);
             socket.emit('joinGame', {
                 roomID: roomData.roomID,
-                playerName: playerName
+                playerName: playerName,
+                id: localStorage.getItem('id')
             });
         });
 
         socket.on("updatePlayers", (roomData) => {
             console.log("Update players received:", roomData);
             localStorage.setItem('currentRoom', roomData.roomID);
-            navigate('/gameroom');
+            navigate('/gameroom/');
         });
 
         socket.on("errorDialogue", (data) => {
@@ -52,7 +55,8 @@ const JoinCreateGameRoom = () => {
         localStorage.setItem('playerName', playerName);
         socket.emit('joinGame', {
             roomID: roomCode,
-            playerName: playerName
+            playerName: playerName,
+            id: localStorage.getItem('id')
         });
     };
 
