@@ -45,13 +45,6 @@ const GameInSession = () => {
             socket.emit('getRoomState', { roomID });
         });
 
-        socket.on("seeTheFuture", ({ playerID, future }) => {
-            if (playerID === localStorage.getItem('id')) {
-                setFutureCards(future);
-                setTimeout(() => setFutureCards(null), 5000);
-            }
-        });
-
         return () => {
             socket.off("updatePlayers");
             socket.off("giveCard");
@@ -136,7 +129,6 @@ const GameInSession = () => {
                     <div
                         key={player.id}
                         className={`player-${player.id}`}
-                        onClick={() => promptType === 'selectPlayer' && handlePlayerSelect(player)}
                     >
                         {[...Array(player.hand?.length || 0)].map((_, cardIndex) => (
                             <CardBack
