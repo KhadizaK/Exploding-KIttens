@@ -31,6 +31,7 @@ io.on("connection", (socket) => {
       roomID: roomID,
       players: [],
       deck: generateDeck(),
+      discardPile: [],
       turn: 0,
       ranking: [],
       hostId: socket.id
@@ -67,6 +68,7 @@ io.on("connection", (socket) => {
   })
   socket.on('getRoomState', (data) => {
     if (rooms[data.roomID]) {
+      console.log(JSON.stringify(rooms[data.roomID]))
       io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
     }
   });
@@ -74,6 +76,7 @@ io.on("connection", (socket) => {
     io.to(data.roomID).emit("startGameClient", data)
   })
   socket.on('cardPlaced', (data) => {
+    console.log(JSON.stringify(data))
     let nopeResponse;
     // Check if two/three 'Cat Cards' were placed
     if (data.cards) {
@@ -100,6 +103,13 @@ io.on("connection", (socket) => {
       return;
     }
     let card = data.card
+    rooms[data.roomID]["players"][getPlayerIndex(data.roomID, data.playerID ? data.playerID : data.givingPlayerID)]["hand"].splice(data.index, 1);
+    rooms[data.roomID].discardPile.unshift(card)
+    io.to(data.roomID).emit('giveCard', {
+      from: data.playerID ? data.playerID : data.givingPlayerID,
+      to: 'pile',
+      card: card
+    })
     switch (card.id) {
       case 2: // Attack
         nopeResponse = nopeCard(socket, data.roomID, data.playerID)

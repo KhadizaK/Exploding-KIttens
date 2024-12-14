@@ -20,6 +20,10 @@ const GameInSession = () => {
         deckCount: 16
     });
 
+    const [selectedCard, setSelectedCard] = useState(null);
+    const [selectedCardIndices, setSelectedCardIndices] = useState([]);
+    const [showPlayerSelection, setShowPlayerSelection] = useState(false);
+
     useEffect(() => {
         if (!roomID) {
             navigate('/join-create-gameroom');
@@ -37,7 +41,9 @@ const GameInSession = () => {
                 players: roomData.players,
                 yourHand: currentPlayer ? currentPlayer.hand : [],
                 deckCount: roomData.deck ? roomData.deck.length : 16,
-                currentTurn: roomData.turn || 0
+                currentTurn: roomData.turn || 0,
+                discardPile: roomData.discardPile,
+                turn: roomData.turn
             }));
         });
 
@@ -52,12 +58,91 @@ const GameInSession = () => {
     }, [roomID, navigate]);
 
     const handleCardClick = (index) => {
-        return;
-    }
+        const isYourTurn = gameState.players[gameState.currentTurn]?.id === localStorage.getItem('id');
+        if (!isYourTurn) {
+            console.log("Not your turn");
+            return;
+        }
+
+        const card = gameState.yourHand[index];
+        if (!card) return;
+
+        // Handle Cat Cards
+        if (card.id === 8) {
+            handleCatCard(index);
+            return;
+        }
+
+        // Reset any selected cat cards
+        setSelectedCardIndices([]);
+
+        // Handle other cards
+        switch (card.id) {
+            case 5: // Favor
+                setSelectedCard(index);
+                setShowPlayerSelection(true);
+                break;
+            case 2: // Attack
+            case 3: // Nope
+            case 4: // Skip
+            case 6: // Shuffle
+            case 7: // See the Future
+                playCard(index);
+                break;
+            default:
+                console.log("Unhandled card type:", card.type);
+        }
+    };
+
+    const handleCatCard = (index) => {
+        if (selectedCardIndices.includes(index)) {
+            setSelectedCardIndices(prev => prev.filter(i => i !== index));
+        } else {
+            if (selectedCardIndices.length < 2) {
+                const newSelection = [...selectedCardIndices, index];
+                setSelectedCardIndices(newSelection);
+                if (newSelection.length === 2) {
+                    setShowPlayerSelection(true);
+                }
+            }
+        }
+    };
+
+    const playCard = (index) => {
+        const card = gameState.yourHand[index];
+        socket.emit("cardPlaced", {
+            roomID,
+            playerID: localStorage.getItem('id'),
+            card,
+            index
+        });
+    };
 
     const handlePlayerSelect = (targetPlayer) => {
-        return;
-    }
+        if (selectedCardIndices.length === 2) {
+            // Playing two cat cards
+            const cards = selectedCardIndices.map(index => gameState.yourHand[index]);
+            socket.emit("cardPlaced", {
+                roomID,
+                playerID: localStorage.getItem('id'),
+                givingPlayerID: localStorage.getItem('id'),
+                receivingPlayerID: targetPlayer.id,
+                cards: cards
+            });
+            setSelectedCardIndices([]);
+        } else if (selectedCard !== null) {
+            // Playing favor card
+            socket.emit("cardPlaced", {
+                roomID,
+                playerID: localStorage.getItem('id'),
+                givingPlayerID: localStorage.getItem('id'),
+                receivingPlayerID: targetPlayer.id,
+                card: gameState.yourHand[selectedCard]
+            });
+            setSelectedCard(null);
+        }
+        setShowPlayerSelection(false);
+    };
     const handleDrawCard = () => {
         const isYourTurn = gameState.players[gameState.currentTurn]?.id === localStorage.getItem('id');
 
@@ -99,7 +184,6 @@ const GameInSession = () => {
             </div>
 
             {/* Drawing Deck */}
-            <div className="drawing_deck">
                 {[...Array(gameState.deckCount)].map((_, index) => (
                     <div key={`drawing-deck-${index}`} onClick={handleDrawCard}>
                         <CardBack
@@ -108,19 +192,15 @@ const GameInSession = () => {
                         />
                     </div>
                 ))}
-            </div>
 
             {/* Discard Pile */}
-            <div className="discard-pile absolute top-1/2 left-1/2 transform translate-x-8 -translate-y-1/2">
-                {gameState.discardPile.length > 0 && (
-                    <CardFront
-                        playerCard={0}
-                        deck={[gameState.discardPile[gameState.discardPile.length - 1].type.toLowerCase().replaceAll(" ", "_")]}
-                        totalCards={1}
-                        position={0}
-                    />
-                )}
-            </div>
+            {[...Array(gameState.discardPile)].map((_, index) => (
+                    <CardFront playerCard={0}
+                deck={gameState.discardPile.map((card) => card.type.toLowerCase().replaceAll(" ", "_"))} totalCards={gameState.discardPile.length}
+                position={index} key={`your-card-${index}`}
+                />
+                ))
+            }
 
             {/* Other Players */}
             {gameState.players
