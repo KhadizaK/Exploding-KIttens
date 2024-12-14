@@ -22,8 +22,8 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/guest-user" element={<GuestUser />} />
-        <Route path="/join-create-gameroom" element={<JoinCreateGameRoom />} />
-        <Route path="/gameroom" element={<GameRoom />} />
+        <Route path="/join-create-game-room" element={<JoinCreateGameRoom />} />
+        <Route path="/game-room" element={<GameRoom />} />
         <Route path="/room-011" element={<GameInSession />} />  {/* 011 as placeholder for room ID */}
         <Route path="/game-room-list" element={<GameRoomList />} />
       </Routes>

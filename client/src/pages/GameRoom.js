@@ -2,8 +2,20 @@ import React, { useState } from 'react';
 import Banner from '../components/Banner';
 import Button from '../components/Button';
 import PlayerList from './PlayerList';
+import { useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const GameRoom = () => {
+
+    // Location used to retrieve state info from browser
+    const location = useLocation();
+    const playerName = location.state.playerName;
+    const roomID = location.state.roomID;
+
+    //TODO: add input validation, the roomID gotten from the browser above 
+    //could not be tied to an actual room, redirect
+
+    //TODO: add functionality, this is currently a placeholder
     //place holder for the players' status for backend
     const [players, setPlayers] = useState([
         { name: 'Player 1', status: 0 },
@@ -12,6 +24,8 @@ const GameRoom = () => {
         { name: 'Player 4', status: 0 },
         { name: 'Player 5', status: 1 },
     ]);
+
+    //TODO: add functionality, this is currently a placeholder
     //place holder for room number
     const roomNumber = '011';
     const [GameStart, setGameStart] = useState(true);
@@ -24,11 +38,13 @@ const GameRoom = () => {
         setCurrentTurn((prevTurn) => (prevTurn + 1));
     };
 
+    //TODO: this is not where this function belongs, should be GameInSession?
     //place holder from draw card function
     const drawCard = () => {
         alert('Card drawn!');
     };
 
+    //TODO: determine where playerStatus is coming from, namely there is no ready up button
     //check for status and show it in player's list
     const statusNow = (playerStatus) => {
         if (playerStatus === 0) {

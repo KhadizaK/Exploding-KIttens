@@ -35,9 +35,9 @@ describe('App Component Routing', () => {
     expect(screen.getByText(/register/i)).toBeInTheDocument();
   });
 
-  test('renders JoinCreateGameRoom component on /join-create-gameroom route', () => {
+  test('renders JoinCreateGameRoom component on /join-create-game-room route', () => {
     render(
-      <MemoryRouter initialEntries={['/join-create-gameroom']}>
+      <MemoryRouter initialEntries={['/join-create-game-room']}>
         <App />
       </MemoryRouter>
     );

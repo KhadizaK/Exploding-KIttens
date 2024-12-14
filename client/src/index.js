@@ -17,10 +17,10 @@ const router = createBrowserRouter([
   { path:'/login', element:<LoginPage /> },
   { path:'/register', element:<RegisterPage /> },
   { path:'/guest-user', element:<GuestUser />},
-  { path:'/join-create-gameroom', element:<JoinCreateGameRoom /> },
-  { path:'/gameroom', element:<GameRoom />},
+  { path:'/join-create-game-room', element:<JoinCreateGameRoom /> },
+  { path:'/game-room', element:<GameRoom />},
   { path:'/room-011', element:<GameInSession />}, // 011 as placeholder for room ID
-  { path:'/gameroomlist', element:<GameRoomList />},
+  { path:'/game-room-list', element:<GameRoomList />},
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

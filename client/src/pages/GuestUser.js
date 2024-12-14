@@ -21,9 +21,12 @@ const GuestUser = () => {
                         placeholder='Screen name here...' 
                         className='rounded p-1'
                         onChange={(event) => {
-                           setPlayerName(event.target.value)}}
+                           setPlayerName(event.target.value)
+                        }}
                     />
-                    <Link to="/join-create-gameroom" state={routeState}> <Button title='Submit' /> </Link>
+                    <Link to="/join-create-game-room" state={routeState}>
+                        <Button title='Submit' />
+                    </Link>
                 </div>
             </div>
         </div>
