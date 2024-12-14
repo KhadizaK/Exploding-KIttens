@@ -9,9 +9,7 @@ import GameRoom from './pages/GameRoom';
 import GameInSession from './pages/GameInSession';
 import GameRoomList from './pages/GameRoomList';
 import "./App.css";
-import io from "socket.io-client";
 
-const socket = io.connect("http://localhost:3001");
 
 const App = () => {
   return (
@@ -30,5 +28,6 @@ const App = () => {
     </div>
   )
 }
+
 
 export default App

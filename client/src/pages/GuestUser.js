@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 const GuestUser = () => {
 
+    //TODO: do we need to generate a playerID (new field) here? two users could select the same playerName
     const [playerName, setPlayerName] = useState("");
     const routeState = {playerName};
     

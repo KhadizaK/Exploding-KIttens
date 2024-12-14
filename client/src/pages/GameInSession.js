@@ -3,8 +3,25 @@ import CardBack from '../components/CardBack'
 import './GameInSession.css'
 import CardFront from '../components/CardFront'
 import HighlightTurn from '../components/HighlightTurn'
+import io from "socket.io-client";
+
+const socket = io.connect("http://localhost:3001");
 
 const GameInSession = () => {
+
+  // Example socket implementation
+  socket.on("connect", () => {
+    console.log(socket.id);
+
+    socket.emit("send_message", {msg:"Hello World!"});
+
+    socket.on("receive_message", (data) => {
+      console.log("client received: ", data);
+      //socket.broadcast.emit("receive_message", data);
+    });
+
+  });
+
   return (
     <div className='GameInSession bg-gameroom h-screen
                     flex items-center'>

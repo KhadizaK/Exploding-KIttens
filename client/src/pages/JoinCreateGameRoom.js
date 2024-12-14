@@ -48,7 +48,7 @@ const JoinCreateGameRoom = () => {
           <Button title='Join Game Room' onClick={() => setIsJoiningGame(true)} />
 
           {/* TODO: make this generate a roomID and actually create a room that others can connect to */}
-          <Link to="game-room" state={routeState}>
+          <Link to="/game-room" state={routeState}>
             <Button title='Create Game Room' />
           </Link>
         </div>
