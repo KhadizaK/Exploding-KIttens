@@ -3,10 +3,15 @@ import { Routes, Route } from 'react-router-dom';
 import LoginSignup from './pages/LoginSignup';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import GuestUser from './pages/GuestUser';
 import JoinCreateGameRoom from './pages/JoinCreateGameRoom';
 import GameRoom from './pages/GameRoom';
 import GameInSession from './pages/GameInSession';
 import GameRoomList from './pages/GameRoomList';
+import "./App.css";
+import io from "socket.io-client";
+
+const socket = io.connect("http://localhost:3001");
 
 const App = () => {
   return (
@@ -16,10 +21,11 @@ const App = () => {
         <Route path="/" element={<LoginSignup />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/guest-user" element={<GuestUser />} />
         <Route path="/join-create-gameroom" element={<JoinCreateGameRoom />} />
         <Route path="/gameroom" element={<GameRoom />} />
         <Route path="/room-011" element={<GameInSession />} />  {/* 011 as placeholder for room ID */}
-        <Route path="/gameroomlist" element={<GameRoomList />} />
+        <Route path="/game-room-list" element={<GameRoomList />} />
       </Routes>
     </div>
   )

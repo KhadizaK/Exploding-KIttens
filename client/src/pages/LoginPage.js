@@ -1,6 +1,6 @@
-import React from 'react'
-import Banner from '../components/Banner'
-import Button from '../components/Button'
+import React from 'react';
+import Banner from '../components/Banner';
+import Button from '../components/Button';
 
 const LoginPage = () => {
     return (
