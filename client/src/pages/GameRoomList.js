@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './GameRoomList.css';
 import Button from '../components/Button';
 import Banner from '../components/Banner';
 
 const GameRoomList = () => {
+    const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const [gameRooms, setGameRooms] = useState([
+    const handleJoinRoom = (roomNumber) => {
+        const playerName = localStorage.getItem('playerName');
+        if (!playerName) {
+            navigate('/join-create-gameroom');
+            return;
+        }
+        navigate('/join-create-gameroom');
+    };
+
+    const gameRooms = [
         { roomNumber: '011', players: 5, gameStarted: false },
         { roomNumber: '012', players: 4, gameStarted: true },
         { roomNumber: '013', players: 2, gameStarted: false },
-        { roomNumber: '014', players: 5, gameStarted: true },
-        { roomNumber: '024', players: 5, gameStarted: true },
-        { roomNumber: '034', players: 5, gameStarted: true },
-        { roomNumber: '045', players: 5, gameStarted: true },
-    ]);
+    ];
 
-    const [searchQuery, setSearchQuery] = useState('');
     const filteredRooms = gameRooms.filter(room =>
         room.roomNumber.includes(searchQuery)
     );
@@ -43,7 +50,10 @@ const GameRoomList = () => {
                             <p>Players: {room.players}</p>
                             <p>Status: {room.gameStarted ? 'In Progress' : 'Not Started'}</p>
                         </div>
-                        <Button title='Join' link='/room-011' />
+                        <Button
+                            title='Join'
+                            onClick={() => handleJoinRoom(room.roomNumber)}
+                        />
                     </div>
                 ))}
             </div>
