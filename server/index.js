@@ -32,7 +32,8 @@ io.on("connection", (socket) => {
       players: [],
       deck: generateDeck(),
       turn: 0,
-      ranking: []
+      ranking: [],
+      hostId: socket.id
     };
     console.log(rooms);
     socket.join(roomID);
