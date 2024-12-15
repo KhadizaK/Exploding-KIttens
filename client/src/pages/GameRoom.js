@@ -1,51 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Banner from '../components/Banner';
 import Button from '../components/Button';
 import PlayerList from './PlayerList';
+import { socket } from '../socket';
+import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { socket } from '../socket';
+import { useNavigate } from 'react-router-dom';
 
 const GameRoom = () => {
+  
+  // Location used to retrieve state info from browser (leftover?)
+    // const location = useLocation();
+    // const playerName = location.state.playerName;
+    // const roomID = location.state.roomID;
+  
+    const navigate = useNavigate();
+    const roomID = localStorage.getItem('currentRoom');
+    const [players, setPlayers] = useState([]);
+    const [gameStart, setGameStart] = useState(false);
+    const [isHost, setIsHost] = useState(false);
 
-    // Location used to retrieve state info from browser
-    const location = useLocation();
-    const playerName = location.state.playerName;
-    const roomID = location.state.roomID;
+    useEffect(() => {
+        if (!roomID) {
+            navigate('/join-create-gameroom');
+            return;
+        }
 
-    //TODO: add input validation, the roomID gotten from the browser above 
-    //could not be tied to an actual room, redirect
+        socket.emit('getRoomState', { roomID });
 
-    //TODO: add functionality, this is currently a placeholder
-    //place holder for the players' status for backend
-    const [players, setPlayers] = useState([
-        { name: 'Player 1', status: 0 },
-        { name: 'Player 2', status: 1 },
-        { name: 'Player 3', status: 1 },
-        { name: 'Player 4', status: 0 },
-        { name: 'Player 5', status: 1 },
-    ]);
+        socket.on("updatePlayers", (roomData) => {
+            console.log("Player update received in GameRoom:", roomData);
+            if (roomData && roomData.players) {
+                const updatedPlayers = roomData.players.map(player => ({
+                    name: player.name,
+                    status: 1,
+                }));
+                setPlayers(updatedPlayers);
+                setIsHost(roomData.hostId === socket.id);
+            }
+        });
 
-    //TODO: add functionality, this is currently a placeholder
-    //place holder for room number
-    const roomNumber = '011';
-    const [GameStart, setGameStart] = useState(true);
-    const [currentTurn, setCurrentTurn] = useState(0);
+        socket.on("startGameClient", (data) => {
+            setGameStart(true);
+            window.location.href = `/room/${roomID}`;
+        });
+
+        return () => {
+            socket.off("updatePlayers");
+            socket.off("startGameClient");
+        };
+    }, [roomID, navigate]);
 
     const startGame = () => {
-        setGameStart(true);
+        if (isHost) {
+            socket.emit('startGame', { roomID });
+        }
     };
-    const nextTurn = () => {
-        setCurrentTurn((prevTurn) => (prevTurn + 1));
-    };
-
-    //TODO: this is not where this function belongs, should be GameInSession?
-    //place holder from draw card function
-    const drawCard = () => {
-        alert('Card drawn!');
-    };
-
-    //TODO: determine where playerStatus is coming from, namely there is no ready up button
-    //check for status and show it in player's list
+  
     const statusNow = (playerStatus) => {
         if (playerStatus === 0) {
             return "Not Ready";
@@ -58,20 +71,26 @@ const GameRoom = () => {
         <div className="game_room bg-ek-bg text-ek-txt h-screen flex flex-col justify-center items-center">
             <Banner />
             <div>Game Room Code:
-                <span> {roomNumber}</span>
+                <span> {roomID}</span>
             </div>
 
             <PlayerList players={players} statusNow={statusNow} />
 
             <div className="game_control">
-                {!GameStart ? ( // when everyone is ready, redirect to generated private game room
-                    <Button title='Waiting for everyone to get ready...' />
-                ) : (
-                    <Button title='Start Game!' link='/room-011' /> // 011 as placeholder for room ID
+                {!gameStart && (
+                    isHost ? (
+                        <Button
+                            title={players.length < 2 ? 'Waiting for players...' : 'Start Game!'}
+                            onClick={startGame}
+                            disabled={players.length < 2}
+                        />
+                    ) : (
+                        <Button title='Waiting for host to start game...' disabled={true} />
+                    )
                 )}
             </div>
         </div>
-    )
+    );
 }
 
 export default GameRoom;
