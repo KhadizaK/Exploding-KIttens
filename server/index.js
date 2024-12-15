@@ -68,19 +68,19 @@ io.on("connection", (socket) => {
   })
   socket.on('getRoomState', (data) => {
     if (rooms[data.roomID]) {
-      console.log(JSON.stringify(rooms[data.roomID]))
+      // console.log(JSON.stringify(rooms[data.roomID]))
       io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
     }
   });
   socket.on('startGame', (data) => {
     io.to(data.roomID).emit("startGameClient", data)
   })
-  socket.on('cardPlaced', (data) => {
+  socket.on('cardPlaced', async (data) => {
     console.log(JSON.stringify(data))
     let nopeResponse;
     // Check if two/three 'Cat Cards' were placed
     if (data.cards) {
-      nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
+      nopeResponse = await nopeCard(socket, data.roomID, data.givingPlayerID)
       if (nopeResponse.response === 1) {
         return;
       }
@@ -112,11 +112,11 @@ io.on("connection", (socket) => {
     })
     switch (card.id) {
       case 2: // Attack
-        nopeResponse = nopeCard(socket, data.roomID, data.playerID)
+        nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID, data.receivingPlayerID)
         if (nopeResponse.response === 1) {
           break;
         }
-        let cards = attackCard(data.roomID, data.playerID).slice(-2)
+        let cards = attackCard(data.roomID, data.receivingPlayerID).slice(-2)
         io.to(data.roomID).emit('giveCards', {
           from: "deck",
           to: data.playerID,
@@ -124,18 +124,20 @@ io.on("connection", (socket) => {
         })
         break;
       case 4: // Skip
-        nopeResponse = nopeCard(socket, data.roomID)
+        nopeResponse = await nopeCard(socket, data.roomID, data.playerID)
         if (nopeResponse.response === 1) {
           break;
         }
         skipCard(data.roomID)
         break;
       case 5: // Favor
-        nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID)
+        nopeResponse = await nopeCard(socket, data.roomID, data.receivingPlayerID, data.givingPlayerID)
         if (nopeResponse.response === 1) {
           break;
         }
-        let card = favorCard(data.roomID, data.receivingPlayerID, data.givingPlayerID).at(-1)
+        rooms[data.roomID]["players"][getPlayerIndex(data.roomID, data.receivingPlayerID)]["hand"].splice(data.index, 1);
+        let favorCardResponse = await favorCard(socket, data.roomID, data.receivingPlayerID, data.givingPlayerID)
+        let card = favorCardResponse.at(-1)
         io.to(data.roomID).emit('giveCard', {
           from: data.givingPlayerID,
           to: data.receivingPlayerID,
@@ -143,14 +145,15 @@ io.on("connection", (socket) => {
         })
         break;
       case 6: // Shuffle
-        nopeResponse = nopeCard(socket, data.roomID)
+        nopeResponse = await nopeCard(socket, data.roomID, data.playerID)
         if (nopeResponse.response === 1) {
           break;
         }
         shuffleCard(data.roomID)
         break;
       case 7: // See the Future
-        nopeResponse = nopeCard(socket, data.roomID)
+        nopeResponse = await nopeCard(socket, data.roomID, data.playerID)
+        console.log("Nope Response:", nopeResponse)
         if (nopeResponse.response === 1) {
           break;
         }
@@ -325,13 +328,13 @@ async function favorCard(socket, roomID, receivingPlayerID, givingPlayerID) {
       });
     });
   }
-
   let receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID)
   let givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID)
   let cardIndex = await getCardIndexFromPlayer(socket, roomID, givingPlayerID)
   if (cardIndex >= rooms[roomID]["players"][givingPlayerIndex]["hand"].length){
     return {error: 'Card not in hand'}
   }
+  console.log(cardIndex)
   let card = rooms[roomID]["players"][givingPlayerIndex]["hand"].splice(cardIndex, 1)[0]
   rooms[roomID]["players"][receivingPlayerIndex]["hand"].push(card)
   return rooms[roomID]["players"][receivingPlayerIndex]["hand"]
@@ -339,7 +342,8 @@ async function favorCard(socket, roomID, receivingPlayerID, givingPlayerID) {
 
 function attackCard(roomID, playerID) {
   let playerIndex = getPlayerIndex(roomID, playerID)
-  rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID), getNewCard(roomID))
+  rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID))
+  rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID))
   return rooms[roomID]["players"][playerIndex]["hand"]
 }
 
@@ -376,37 +380,61 @@ function explodingKittenCard(roomID, playerID) {
   }
 }
 
-async function nopeCard(socket, roomID, playerID) {
-  function getResponseForNope(socket, playerID) {
-    return new Promise((resolve, reject) => {
-      io.to(playerID).emit('getResponseForNope')
+async function nopeCard(socket, roomID, cardPlacedPlayerID, playerID) {
+  console.log("nopeCard called");
 
-      socket.once('receiveResponseForNope', (data) => {
-        if (data) {
+  function getResponseForNope(playerWithNopeID) {
+    return new Promise((resolve, reject) => {
+      console.log("Getting nope response from player:", playerWithNopeID);
+
+      io.to(playerWithNopeID).emit('getResponseForNope');
+
+      // Create a one-time listener for this specific player's response
+      const handler = (respondingSocket, data) => {
+        if (respondingSocket.id === playerWithNopeID) {
+          console.log("Received nope response from player:", playerWithNopeID, data);
+          // Remove all listeners for this response to avoid memory leaks
+          io.sockets.sockets.forEach(socket => {
+            socket.removeAllListeners('receiveResponseForNope');
+          });
           resolve(data.response);
-        } else {
-          reject(new Error('No response from client'));
         }
+      };
+
+      // Add the listener to all sockets
+      io.sockets.sockets.forEach(socket => {
+        socket.once('receiveResponseForNope', (data) => handler(socket, data));
       });
+
+      // Timeout after 10 seconds
       setTimeout(() => {
+        // Clean up listeners
+        io.sockets.sockets.forEach(socket => {
+          socket.removeAllListeners('receiveResponseForNope');
+        });
         resolve(0);
-      }, 10000);
+      }, 0);
     });
   }
 
-  let players = rooms[roomID]["players"]
+  let players = rooms[roomID]["players"].filter((player) => player.id !== cardPlacedPlayerID);
   if (playerID) {
-    players = [players[getPlayerIndex(roomID, playerID)]]
+    const targetPlayerIndex = getPlayerIndex(roomID, playerID);
+    players = targetPlayerIndex !== -1 ? [players[targetPlayerIndex]] : [];
   }
+
   let playersWithNopes = players.filter((player) => {
-    return getCardIndex(roomID, player.id, 3) > -1
-  })
-  let response = 0
+    return getCardIndex(roomID, player.id, 3) > -1;
+  });
+
+  console.log("Players with Nopes:", playersWithNopes);
+
   for (let player of playersWithNopes) {
-    response = await getResponseForNope(socket, player.id)
+    const response = await getResponseForNope(player.id);
     if (response === 1) {
-      return {playerID: player.id, response: response}
+      return { playerID: player.id, response: response };
     }
   }
-  return {response: response}
+
+  return { response: 0 };
 }

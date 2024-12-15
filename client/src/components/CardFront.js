@@ -16,19 +16,24 @@ import cat_card from '../assets/cards/CAT_CARD.png';
 const CardFront = ({ playerCard, deck = [], totalCards = 0, position, onClick }) => {
   const cardWidth = 64;
   const screenWidth = window.innerWidth;
-
   const cardSpacing = screenWidth < 768 ? 20 : screenWidth <= 1280 ? 32 : cardWidth;
-  const totalWidth = (totalCards - 1) * cardSpacing;
 
-  const isCenterCard = playerCard === 0;
-  const translateXValue = isCenterCard
-    ? 0
-    : position * cardSpacing - totalWidth / 2;
+  // Calculate positioning based on card type
+  let transform = '';
+  if (playerCard === 'future') {
+    const futureCardSpacing = 160;
+    const totalFutureWidth = (totalCards - 1) * futureCardSpacing;
+    const translateX = 135 + position * futureCardSpacing - totalFutureWidth / 2;
+    transform = `translateX(${translateX}px)`;
+  } else {
+    const totalWidth = (totalCards - 1) * cardSpacing;
+    const isCenterCard = playerCard === 0;
+    const translateXValue = isCenterCard ? 0 : position * cardSpacing - totalWidth / 2;
+    transform = isCenterCard ? '' : `translateX(${translateXValue}px)`;
+  }
 
-  // get card type based on position
   const card_type = deck[position] || null;
 
-  // map card types to images
   const cardImages = {
     defuse,
     attack,
@@ -44,36 +49,33 @@ const CardFront = ({ playerCard, deck = [], totalCards = 0, position, onClick })
     cat_card,
     skip
   };
-  // TODO: assign card type action/effect
 
   const cardImage = cardImages[card_type] || null;
 
   return (
-    <div
-      className={`Card absolute  m-auto inline-flex rounded-full drop-shadow-lg 
+      <div
+          className={`Card absolute m-auto inline-flex rounded-full drop-shadow-lg 
                 w-fit
-              ${isCenterCard ? 'h-32 max-sm:h-24 -translate-y-24 max-sm:-translate-y-12 top-1/2 left-1/2 transform'
-          : 'h-48 max-sm:h-32 bottom-4 right-0 left-0'}
-                `}
-      style={{
-        transform: isCenterCard
-          ? ``
-          : `translateX(${translateXValue}px)`,
-      }}
-      onClick={onClick}
-    >
-      <img
-        className={`rounded-lg object-cover drop-shadow-lg
+                ${playerCard === 'future'
+              ? 'h-48' // Future cards size
+              : playerCard === 0
+                  ? 'h-32 max-sm:h-24 -translate-y-24 max-sm:-translate-y-12 top-1/2 left-1/2 transform'
+                  : 'h-48 max-sm:h-32 bottom-4 right-0 left-0'}`}
+          style={{
+            transform: transform
+          }}
+          onClick={onClick}
+      >
+        <img
+            className={`rounded-lg object-cover drop-shadow-lg
                     hover:brightness-90
                     hover:cursor-pointer
-                    ${isCenterCard ? 'hover:-translate-y-4' : 'hover:-translate-y-12'}
-                    ease-out duration-300 
-                  `}
-        src={cardImage}
-        alt={card_type ? card_type.charAt(0).toUpperCase() + card_type.slice(1) : 'Card'}
-      />
-    </div>
-
+                    ${playerCard === 0 ? 'hover:-translate-y-4' : 'hover:-translate-y-12'}
+                    ease-out duration-300`}
+            src={cardImage}
+            alt={card_type ? card_type.charAt(0).toUpperCase() + card_type.slice(1) : 'Card'}
+        />
+      </div>
   );
 };
 
