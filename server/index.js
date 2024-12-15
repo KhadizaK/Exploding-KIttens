@@ -53,6 +53,11 @@ io.on("connection", (socket) => {
       socket.emit("errorDialogue", {text: "This room doesn't exist"})
     }
   })
+  socket.on('getRoomState', (data) => {
+    if (rooms[data.roomID]) {
+      socket.emit('updatePlayers', rooms[data.roomID]);
+    }
+  });
   socket.on('startGame', (data) => {
     io.to(data.roomID).emit("startGameClient", data)
   })
