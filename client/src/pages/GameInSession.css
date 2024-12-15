@@ -3,3 +3,92 @@
     border: 2px solid red; 
 } */
 
+.shake-animation {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.draw-animation {
+    animation: draw 0.5s ease-out;
+}
+
+.attack-animation {
+    animation: attack 1s ease-out;
+}
+
+.skip-animation {
+    animation: skip 0.5s ease-out;
+}
+
+.shuffle-animation {
+    animation: shuffle 1s ease-out;
+}
+
+.future-animation {
+    animation: future 0.8s ease-out;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@keyframes draw {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes attack {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(0) translateY(-100px); }
+}
+
+@keyframes skip {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(200px) rotate(45deg); }
+}
+
+@keyframes shuffle {
+    0% { transform: rotate(0); }
+    25% { transform: rotate(90deg); }
+    75% { transform: rotate(-90deg); }
+    100% { transform: rotate(0); }
+}
+
+@keyframes future {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2) translateY(-20px); }
+    100% { transform: scale(0) translateY(-50px); }
+}
+
+/* Add to GameInSession.css */
+.card-animation {
+    position: fixed;
+    width: 64px;
+    height: 96px;
+    pointer-events: none;
+    transition: all 0.5s ease;
+    z-index: 1000;
+}
+
+.card-origin {
+    opacity: 1;
+}
+
+.card-destination {
+    opacity: 0;
+}
+
+.see-the-future-cards {
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}

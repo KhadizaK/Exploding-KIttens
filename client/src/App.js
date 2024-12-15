@@ -18,7 +18,7 @@ const App = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/join-create-gameroom" element={<JoinCreateGameRoom />} />
         <Route path="/gameroom" element={<GameRoom />} />
-        <Route path="/room-011" element={<GameInSession />} />  {/* 011 as placeholder for room ID */}
+        <Route path="/room/:roomID" element={<GameInSession />} />  {/* 011 as placeholder for room ID */}
         <Route path="/gameroomlist" element={<GameRoomList />} />
       </Routes>
     </div>
