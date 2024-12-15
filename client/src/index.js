@@ -17,7 +17,7 @@ const router = createBrowserRouter([
   { path:'/register', element:<RegisterPage /> },
   { path:'/join-create-gameroom', element:<JoinCreateGameRoom /> },
   { path:'/gameroom', element:<GameRoom />},
-  { path:'/room-011', element:<GameInSession />}, // 011 as placeholder for room ID
+  { path:'/room/:roomID', element:<GameInSession />}, 
   { path:'/gameroomlist', element:<GameRoomList />},
 ]);
 
