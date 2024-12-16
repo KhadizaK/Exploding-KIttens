@@ -14,7 +14,6 @@ const JoinCreateGameRoom = () => {
     useEffect(() => {
         socket.on("gameCreated", (roomData) => {
             localStorage.setItem('id', socket.id);
-            console.log("Room created:", roomData);
             socket.emit('joinGame', {
                 roomID: roomData.roomID,
                 playerName: playerName,
@@ -23,7 +22,6 @@ const JoinCreateGameRoom = () => {
         });
 
         socket.on("updatePlayers", (roomData) => {
-            console.log("Update players received:", roomData);
             localStorage.setItem('currentRoom', roomData.roomID);
             navigate('/gameroom/');
         });
