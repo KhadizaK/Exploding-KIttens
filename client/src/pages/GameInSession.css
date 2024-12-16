@@ -116,3 +116,17 @@
     width: 150px;
     padding-bottom: 0px;
 }
+
+input[type="number"] {
+    background: transparent;
+    margin-left: 20px;
+    width: 50px;
+    outline: none;
+    text-align: center;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

@@ -31,7 +31,7 @@ const GameInSession = () => {
     const [showNopePrompt, setShowNopePrompt] = useState(false);
     const [currentAction, setCurrentAction] = useState(null);
     const [showFavorCardSelection, setShowFavorCardSelection] = useState(false);
-    const [yourCards, setYourCards] = useState([]);
+    const [showExplodingKittenPrompt, setShowExplodingKittenPrompt] = useState(false);
 
     useEffect(() => {
         if (!roomID) {
@@ -52,7 +52,6 @@ const GameInSession = () => {
                 currentTurn: roomData.turn || 0,
                 discardPile: roomData.discardPile,
                 turn: roomData.turn,
-                roomID: roomData.roomID
             }));
             console.log(roomData)
         });
@@ -78,12 +77,29 @@ const GameInSession = () => {
 
         });
 
+        socket.on("placeExplodingKitten", (data) => {
+            if (data.playerID === localStorage.getItem('id')) {
+                setShowExplodingKittenPrompt(true);
+            }
+        });
+
+        socket.on("playerLost", (data) => {
+            socket.emit('getRoomState', { roomID });
+        })
+
+        socket.on("gameOver", (data) => {
+            console.log("Winner: ", data.winner)
+        })
+
         return () => {
             socket.off("updatePlayers");
             socket.off("giveCard");
             socket.off('getResponseForFavor');
             socket.off('getResponseForNope');
             socket.off('seeTheFuture');
+            socket.off("placeExplodingKitten");
+            socket.off("playerLost")
+            socket.off("gameOver")
         };
     }, [roomID, navigate]);
 
@@ -91,7 +107,7 @@ const GameInSession = () => {
         setShowFavorCardSelection(false);
         socket.emit('receiveResponseForFavor', {
             cardIndex,
-            roomID: gameState.roomID,
+            roomID: roomID,
             givingPlayerID: localStorage.getItem('id'),
             receivingPlayerID: currentAction === 'favor' ? selectedCard : selectedPlayerId
         });
@@ -222,11 +238,21 @@ const GameInSession = () => {
     const handleNopeResponse = (useNope) => {
         setShowNopePrompt(false);
         socket.emit("receiveResponseForNope", {
-            roomID: gameState.roomID,
+            roomID: roomID,
             playerID: localStorage.getItem('id'),
             response: useNope ? 1 : 0
         });
     };
+
+    const handleExplodingKittenPlacement = (position) => {
+        setShowExplodingKittenPrompt(false);
+        socket.emit("placeExplodingKittenResponse", {
+            roomID,
+            playerID: localStorage.getItem('id'),
+            position: position
+        });
+    };
+
 
     const openMenu = () => setVisible(true);
     const resumeGame = () => setVisible(false);
@@ -404,7 +430,44 @@ const GameInSession = () => {
                         </div>
                     </div>
                 )}
-
+            {
+                showExplodingKittenPrompt &&
+                (
+                <div className="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+                        <h2 className="text-xl font-bold mb-4">You Drew an Exploding Kitten!</h2>
+                        <p className="mb-6 text-gray-600">You defused it! Where would you like to place it in the deck?</p>
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-700">Position in deck:</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max={gameState.deckCount}
+                                    className="border rounded px-3 py-2 w-24"
+                                    placeholder="0"
+                                    onChange={(e) => {
+                                        const value = Math.min(Math.max(0, parseInt(e.target.value) || 0), gameState.deckCount);
+                                        e.target.value = value;
+                                    }}
+                                />
+                            </div>
+                            <button
+                                onClick={() => {
+                                    const input = document.querySelector('.modal input[type="number"]');
+                                    handleExplodingKittenPlacement(parseInt(input.value) || 0);
+                                }}
+                                className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                            >
+                                Place Card
+                            </button>
+                        </div>
+                        <p className="mt-4 text-sm text-gray-500">
+                            Position 0 is the top of the deck, {gameState.deckCount} is the bottom
+                        </p>
+                    </div>
+                </div>
+            )}
 
 
         </div>

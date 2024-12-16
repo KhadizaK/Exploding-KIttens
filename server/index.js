@@ -188,27 +188,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on('cardPickedUp', (data) => {
-    let playerIndex = getPlayerIndex(data.roomID, data.playerID);
-    let card = getNewCard(data.roomID);
-    if (card.id === 0) {
-      let response = explodingKittenCard(data.roomID, data.playerID);
-      if (response === 1) {
-        io.to(data.roomID).emit('placeExplodingKitten', {
-          roomID: data.roomID,
-          playerID: data.playerID
-        });
-      } else {
-        io.to(data.roomID).emit('playerLost', { playerID: data.playerID });
-      }
-    } else {
-      rooms[data.roomID]["players"][playerIndex]["hand"].push(card);
-      nextTurn(data.roomID);
-      io.to(data.roomID).emit('giveCard', {
-        from: 'deck',
-        to: data.playerID,
-        card: card
-      });
-    }
+    cardPickedUp(data.roomID, data.playerID, true)
   });
 
   socket.on('receiveResponseForFavor', (data) => {
@@ -246,6 +226,11 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+  socket.on('placeExplodingKittenResponse', (data) => {
+    rooms[data.roomID]["deck"].splice(data.position, 0, {id: 0, type: 'Exploding Kitten'});
+    io.to(data.roomID).emit("updatePlayers", rooms[data.roomID]);
+  })
 
 });
 
@@ -292,6 +277,36 @@ function getNewCard(roomID) {
   const chosenCard = deck[0]
   rooms[roomID]["deck"].splice(0, 1)
   return chosenCard
+}
+
+function cardPickedUp(roomID, playerID, incrementTurn){
+  let playerIndex = getPlayerIndex(roomID, playerID);
+  let card = getNewCard(roomID);
+  if (incrementTurn) {
+    nextTurn(roomID)
+  }
+  if (card.id === 0) {
+    let response = explodingKittenCard(roomID, playerID);
+    if (response === 1) {
+      io.to(roomID).emit('placeExplodingKitten', {
+        roomID: roomID,
+        playerID: playerID
+      });
+      io.to(roomID).emit("updatePlayers", rooms[roomID]);
+      io
+    } else {
+      io.to(roomID).emit('playerLost', { playerID: playerID });
+      console.log("Player Lost:", playerID)
+    }
+  } else {
+    rooms[roomID]["players"][playerIndex]["hand"].push(card);
+    io.to(roomID).emit('giveCard', {
+      from: 'deck',
+      to: playerID,
+      card: card
+    });
+  }
+  return card
 }
 
 function playerLoses(roomID, playerID) {
@@ -376,8 +391,10 @@ function seeTheFutureCard(roomID){
 
 function attackCard(roomID, playerID) {
   let playerIndex = getPlayerIndex(roomID, playerID)
-  rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID))
-  rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID))
+  let cards = [cardPickedUp(roomID, playerID, false), cardPickedUp(roomID, playerID, false)].filter((card) => {
+    return card.id !== 0
+  })
+  rooms[roomID]["players"][playerIndex]["hand"].concat(cards)
   return rooms[roomID]["players"][playerIndex]["hand"]
 }
 
