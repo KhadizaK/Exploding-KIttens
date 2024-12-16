@@ -105,7 +105,7 @@
     align-items: center;
 }
 
-.nope-modal > div {
+.nope-modal > div, .win-modal > div, .lose-modal > div {
     background: rgba(256, 256, 256, 0.7);
     color: black;
     border-radius: 20px;

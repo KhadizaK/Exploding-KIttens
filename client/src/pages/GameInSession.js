@@ -32,6 +32,9 @@ const GameInSession = () => {
     const [currentAction, setCurrentAction] = useState(null);
     const [showFavorCardSelection, setShowFavorCardSelection] = useState(false);
     const [showExplodingKittenPrompt, setShowExplodingKittenPrompt] = useState(false);
+    const [showWinScreen, setShowWinScreen] = useState(false);
+    const [showLoseScreen, setShowLoseScreen] = useState(false);
+    const [gameResults, setGameResults] = useState(null);
 
     useEffect(() => {
         if (!roomID) {
@@ -53,7 +56,6 @@ const GameInSession = () => {
                 discardPile: roomData.discardPile,
                 turn: roomData.turn,
             }));
-            console.log(roomData)
         });
 
         socket.on("giveCard", ({ from, to, card }) => {
@@ -84,12 +86,18 @@ const GameInSession = () => {
         });
 
         socket.on("playerLost", (data) => {
-            socket.emit('getRoomState', { roomID });
-        })
+            if (data.playerID === localStorage.getItem('id')) {
+                setShowLoseScreen(true);
+            }
+        });
 
         socket.on("gameOver", (data) => {
-            console.log("Winner: ", data.winner)
-        })
+            const isWinner = data.winner === localStorage.getItem('id');
+            setGameResults(data);
+            if (isWinner) {
+                setShowWinScreen(true);
+            }
+        });
 
         return () => {
             socket.off("updatePlayers");
@@ -102,6 +110,10 @@ const GameInSession = () => {
             socket.off("gameOver")
         };
     }, [roomID, navigate]);
+
+    const handleReturnToLobby = () => {
+        navigate('/join-create-gameroom');
+    };
 
     const handleFavorCardSelection = (cardIndex) => {
         setShowFavorCardSelection(false);
@@ -118,7 +130,6 @@ const GameInSession = () => {
     const handleCardClick = (index) => {
         const isYourTurn = gameState.players[gameState.currentTurn]?.id === localStorage.getItem('id');
         if (!isYourTurn) {
-            console.log("Not your turn");
             return;
         }
 
@@ -157,7 +168,6 @@ const GameInSession = () => {
                 });
                 break;
             default:
-                console.log("Unhandled card type:", card.type);
         }
     };
 
@@ -301,7 +311,7 @@ const GameInSession = () => {
             ))}
 
             {/* Discard Pile */}
-            {[...Array(gameState.discardPile.length)].map((_, index) => (
+            {[...Array(gameState.discardPile)].map((_, index) => (
                 <CardFront playerCard={0}
                            deck={gameState.discardPile.map((card) => card.type.toLowerCase().replaceAll(" ", "_"))} totalCards={gameState.discardPile.length}
                            position={index} key={`your-card-${index}`}
@@ -477,7 +487,84 @@ const GameInSession = () => {
                     </div>
                 </div>
             )}
+            {
+                showLoseScreen &&
+                (
+                <div className="lose-modal modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-8 max-w-md w-full text-center">
+                        <div className="mb-6">
+                            <h2 className="text-4xl font-bold text-red-500 mb-2">💥 BOOM! 💥</h2>
+                            <p className="text-xl text-gray-700">You've been eliminated!</p>
+                            <p className="text-gray-500 mt-2">
+                                The exploding kitten got you! Better luck next time.
+                            </p>
+                        </div>
 
+                        <div className="mb-6">
+                            <p className="text-lg">You can:</p>
+                            <ul className="mt-2 space-y-2 text-gray-600">
+                                <li>• Watch the rest of the game</li>
+                                <li>• Return to lobby for a new game</li>
+                            </ul>
+                        </div>
+
+                        <div className="space-x-4">
+                            <button
+                                onClick={() => setShowLoseScreen(false)}
+                                className="bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                            >
+                                Watch Game
+                            </button>
+                            <button
+                                onClick={handleReturnToLobby}
+                                className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                            >
+                                Return to Lobby
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {
+                showWinScreen &&
+                (
+                <div className="win-modal modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-8 max-w-md w-full text-center transform scale-110">
+                        <div className="mb-6">
+                            <h2 className="text-4xl font-bold text-yellow-500 mb-2">🎉 VICTORY! 🎉</h2>
+                            <p className="text-xl text-gray-700">You've won the game!</p>
+                        </div>
+
+                        {gameResults && gameResults.ranking && (
+                            <div className="mb-6">
+                                <h3 className="text-lg font-semibold mb-2">Final Rankings</h3>
+                                <div className="space-y-2">
+                                    {gameResults.ranking.map((player, index) => (
+                                        <div
+                                            key={player.id}
+                                            className={`p-2 rounded ${
+                                                player.id === localStorage.getItem('id')
+                                                    ? 'bg-yellow-100 font-bold'
+                                                    : 'bg-gray-100'
+                                            }`}
+                                        >
+                                            {index + 1}. {player.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleReturnToLobby}
+                            className="bg-blue-500 text-white py-3 px-8 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                        >
+                            Return to Lobby
+                        </button>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
