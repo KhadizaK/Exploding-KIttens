@@ -14,6 +14,9 @@ const GameRoom = () => {
     const [isHost, setIsHost] = useState(false);
 
     useEffect(() => {
+
+        document.title = "Exploding Kittens - Game Room";
+
         if (!roomID) {
             navigate('/join-create-gameroom');
             return;

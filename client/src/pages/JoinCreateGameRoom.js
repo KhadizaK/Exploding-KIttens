@@ -14,31 +14,34 @@ const JoinCreateGameRoom = () => {
     localStorage.setItem('id', socket.id);
 
     useEffect(() => {
-        socket.on("gameCreated", (roomData) => {
-            console.log("Room created:", roomData);
-            socket.emit('joinGame', {
-                roomID: roomData.roomID,
-                playerName: playerName,
-                id: localStorage.getItem('id')
-            });
-        });
+      
+      document.title = "Exploding Kittens - Join/Create Game Room";
 
-        socket.on("updatePlayers", (roomData) => {
-            console.log("Update players received:", roomData);
-            localStorage.setItem('currentRoom', roomData.roomID);
-            navigate('/gameroom/');
-        });
+      socket.on("gameCreated", (roomData) => {
+          console.log("Room created:", roomData);
+          socket.emit('joinGame', {
+              roomID: roomData.roomID,
+              playerName: playerName,
+              id: localStorage.getItem('id')
+          });
+      });
 
-        socket.on("errorDialogue", (data) => {
-            setErrorMessage(data.text);
-            setTimeout(() => setErrorMessage(''), 3000);
-        });
+      socket.on("updatePlayers", (roomData) => {
+          console.log("Update players received:", roomData);
+          localStorage.setItem('currentRoom', roomData.roomID);
+          navigate('/gameroom/');
+      });
 
-        return () => {
-            socket.off("gameCreated");
-            socket.off("updatePlayers");
-            socket.off("errorDialogue");
-        };
+      socket.on("errorDialogue", (data) => {
+          setErrorMessage(data.text);
+          setTimeout(() => setErrorMessage(''), 3000);
+      });
+
+      return () => {
+          socket.off("gameCreated");
+          socket.off("updatePlayers");
+          socket.off("errorDialogue");
+      };
     }, [navigate, playerName]);
 
     const handleCreateGame = () => {

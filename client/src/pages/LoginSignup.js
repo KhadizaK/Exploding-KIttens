@@ -1,8 +1,13 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Button from '../components/Button'
 import Banner from '../components/Banner'
 
 const LoginSignup = () => {
+
+    useEffect(() => {
+        document.title = "Exploding Kittens - Login";
+      }, []);
+
     return (
         <div className='LoginSignup space-y-4'>
             <Banner />
