@@ -311,7 +311,7 @@ const GameInSession = () => {
             ))}
 
             {/* Discard Pile */}
-            {[...Array(gameState.discardPile)].map((_, index) => (
+            {[...Array(gameState.discardPile.length)].map((_, index) => (
                 <CardFront playerCard={0}
                            deck={gameState.discardPile.map((card) => card.type.toLowerCase().replaceAll(" ", "_"))} totalCards={gameState.discardPile.length}
                            position={index} key={`your-card-${index}`}
