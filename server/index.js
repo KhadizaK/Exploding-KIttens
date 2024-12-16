@@ -18,13 +18,13 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-
   console.log(`User Connected: ${socket.id}`);
 
   socket.on("send_message", (data) => {
     console.log(data);
     socket.broadcast.emit("receive_message", data);
   });
+
   socket.on('createGame', () => {
     const roomID = makeid(3);
     rooms[roomID] = {
@@ -36,13 +36,12 @@ io.on("connection", (socket) => {
       ranking: [],
       hostId: socket.id
     };
-    console.log(JSON.stringify(rooms));
     socket.join(roomID);
     io.to(roomID).emit('gameCreated', rooms[roomID]);
   });
+
   socket.on('joinGame', (data) => {
     if (rooms[data.roomID]) {
-      console.log(data);
       socket.join(data.roomID);
       socket.join(data.id)
       rooms[data.roomID]["players"].push({
@@ -51,142 +50,203 @@ io.on("connection", (socket) => {
         hand: generateHand(data.roomID, 8),
       });
       io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
-    }
-    else {
+    } else {
       socket.emit("errorDialogue", {text: "This room doesn't exist"})
     }
-  })
+  });
+
   socket.on('rejoinGame', (data) => {
     if (rooms[data.roomID]) {
-      playerIDs = rooms[data.roomID]["players"].map((player) => {return player.id})
-      if (playerIDs.includes(data.playerID))
-      {
-        socket.join(data.roomID)
-        socket.join(data.playerID)
+      const playerIDs = rooms[data.roomID]["players"].map((player) => player.id);
+      if (playerIDs.includes(data.playerID)) {
+        socket.join(data.roomID);
+        socket.join(data.playerID);
       }
-    }
-  })
-  socket.on('getRoomState', (data) => {
-    if (rooms[data.roomID]) {
-      // console.log(JSON.stringify(rooms[data.roomID]))
-      io.to(data.roomID).emit("updatePlayers", rooms[data.roomID])
     }
   });
+
+  socket.on('getRoomState', (data) => {
+    if (rooms[data.roomID]) {
+      io.to(data.roomID).emit("updatePlayers", rooms[data.roomID]);
+    }
+  });
+
   socket.on('startGame', (data) => {
-    io.to(data.roomID).emit("startGameClient", data)
-  })
-  socket.on('cardPlaced', async (data) => {
-    console.log(JSON.stringify(data))
-    let nopeResponse;
-    // Check if two/three 'Cat Cards' were placed
+    io.to(data.roomID).emit("startGameClient", data);
+  });
+
+  socket.on('cardPlaced', (data) => {
     if (data.cards) {
-      nopeResponse = await nopeCard(socket, data.roomID, data.givingPlayerID)
-      if (nopeResponse.response === 1) {
-        return;
-      }
-      let length = data.cards.length
-      if (length == 2) {
-        let card = twoCatCards(data.roomID, data.receivingPlayerID, data.givingPlayerID, data.cardIndex).at(-1)
-        io.to(data.roomID).emit('giveCard', {
-          from: data.givingPlayerID,
-          to: data.receivingPlayerID,
-          card: card
-        })
-      }
-      else {
-        let card = threeCatCards(data.roomID, data.receivingPlayerID, data.givingPlayerID, data.cardID).at(-1)
-        io.to(data.roomID).emit('giveCard', {
-          from: data.givingPlayerID,
-          to: data.receivingPlayerID, card: card
-        })
-      }
+      initiateNopeCheck(socket, data.roomID, data.givingPlayerID, null, () => {
+        const length = data.cards.length;
+        if (length === 2) {
+          const cards = data.cards;
+          const indices = data.indices;
+          // Remove cards from giving player's hand
+          const givingPlayerIndex = getPlayerIndex(data.roomID, data.givingPlayerID);
+          indices.sort((a, b) => b - a).forEach(index => {
+            rooms[data.roomID]["players"][givingPlayerIndex]["hand"].splice(index, 1);
+          });
+
+          // Add a random card from receiving player's hand
+          const receivingPlayerIndex = getPlayerIndex(data.roomID, data.receivingPlayerID);
+          const receivingPlayer = rooms[data.roomID]["players"][receivingPlayerIndex];
+          const randomCardIndex = Math.floor(Math.random() * receivingPlayer.hand.length);
+          const stolenCard = receivingPlayer.hand.splice(randomCardIndex, 1)[0];
+
+          rooms[data.roomID]["players"][givingPlayerIndex]["hand"].push(stolenCard);
+          rooms[data.roomID].discardPile.unshift(...cards);
+
+          io.to(data.roomID).emit('giveCard', {
+            from: data.receivingPlayerID,
+            to: data.givingPlayerID,
+            card: stolenCard
+          });
+        } else if (length === 3) {
+          const cards = data.cards;
+          const indices = data.indices;
+          // Remove cards from giving player's hand
+          const givingPlayerIndex = getPlayerIndex(data.roomID, data.givingPlayerID);
+          indices.sort((a, b) => b - a).forEach(index => {
+            rooms[data.roomID]["players"][givingPlayerIndex]["hand"].splice(index, 1);
+          });
+
+          // Take named card from receiving player
+          const receivingPlayerIndex = getPlayerIndex(data.roomID, data.receivingPlayerID);
+          const cardTypeWanted = data.cardTypeWanted;
+          const cardIndex = rooms[data.roomID]["players"][receivingPlayerIndex]["hand"]
+              .findIndex(card => card.type === cardTypeWanted);
+
+          if (cardIndex !== -1) {
+            const stolenCard = rooms[data.roomID]["players"][receivingPlayerIndex]["hand"].splice(cardIndex, 1)[0];
+            rooms[data.roomID]["players"][givingPlayerIndex]["hand"].push(stolenCard);
+            rooms[data.roomID].discardPile.unshift(...cards);
+
+            io.to(data.roomID).emit('giveCard', {
+              from: data.receivingPlayerID,
+              to: data.givingPlayerID,
+              card: stolenCard
+            });
+          }
+        }
+        io.to(data.roomID).emit("updatePlayers", rooms[data.roomID]);
+      });
       return;
     }
-    let card = data.card
-    rooms[data.roomID]["players"][getPlayerIndex(data.roomID, data.playerID ? data.playerID : data.givingPlayerID)]["hand"].splice(data.index, 1);
-    rooms[data.roomID].discardPile.unshift(card)
+
+    let card = data.card;
+    rooms[data.roomID]["players"][getPlayerIndex(data.roomID, data.playerID || data.givingPlayerID)]["hand"].splice(data.index, 1);
+    rooms[data.roomID].discardPile.unshift(card);
     io.to(data.roomID).emit('giveCard', {
-      from: data.playerID ? data.playerID : data.givingPlayerID,
+      from: data.playerID || data.givingPlayerID,
       to: 'pile',
       card: card
-    })
+    });
+
     switch (card.id) {
       case 2: // Attack
-        nopeResponse = nopeCard(socket, data.roomID, data.givingPlayerID, data.receivingPlayerID)
-        if (nopeResponse.response === 1) {
-          break;
-        }
-        let cards = attackCard(data.roomID, data.receivingPlayerID).slice(-2)
-        io.to(data.roomID).emit('giveCards', {
-          from: "deck",
-          to: data.playerID,
-          cards: cards
-        })
+        initiateNopeCheck(socket, data.roomID, data.givingPlayerID, data.receivingPlayerID, () => {
+          let cards = attackCard(data.roomID, data.receivingPlayerID).slice(-2);
+          io.to(data.roomID).emit('giveCards', {
+            from: "deck",
+            to: data.playerID,
+            cards: cards
+          });
+        });
         break;
+
       case 4: // Skip
-        nopeResponse = await nopeCard(socket, data.roomID, data.playerID)
-        if (nopeResponse.response === 1) {
-          break;
-        }
-        skipCard(data.roomID)
+        initiateNopeCheck(socket, data.roomID, data.playerID, null, () => {
+          skipCard(data.roomID);
+          io.to(data.roomID).emit("updatePlayers", rooms[data.roomID]);
+        });
         break;
+
       case 5: // Favor
-        nopeResponse = await nopeCard(socket, data.roomID, data.receivingPlayerID, data.givingPlayerID)
-        if (nopeResponse.response === 1) {
-          break;
-        }
-        rooms[data.roomID]["players"][getPlayerIndex(data.roomID, data.receivingPlayerID)]["hand"].splice(data.index, 1);
-        let favorCardResponse = await favorCard(socket, data.roomID, data.receivingPlayerID, data.givingPlayerID)
-        let card = favorCardResponse.at(-1)
-        io.to(data.roomID).emit('giveCard', {
-          from: data.givingPlayerID,
-          to: data.receivingPlayerID,
-          card: card
-        })
+        initiateNopeCheck(socket, data.roomID, data.receivingPlayerID, data.givingPlayerID, () => {
+          initiateFavorRequest(socket, data.roomID, data.receivingPlayerID, data.givingPlayerID);
+        });
         break;
+
       case 6: // Shuffle
-        nopeResponse = await nopeCard(socket, data.roomID, data.playerID)
-        if (nopeResponse.response === 1) {
-          break;
-        }
-        shuffleCard(data.roomID)
+        initiateNopeCheck(socket, data.roomID, data.playerID, null, () => {
+          shuffleCard(data.roomID);
+          io.to(data.roomID).emit("updatePlayers", rooms[data.roomID]);
+        });
         break;
+
       case 7: // See the Future
-        nopeResponse = await nopeCard(socket, data.roomID, data.playerID)
-        console.log("Nope Response:", nopeResponse)
-        if (nopeResponse.response === 1) {
-          break;
-        }
-        let future = seeTheFutureCard(data.roomID)
-        io.to(data.roomID).emit('seeTheFuture', {
-          playerID: data.playerID,
-          future: future
-        })
+        initiateNopeCheck(socket, data.roomID, data.playerID, null, () => {
+          let future = seeTheFutureCard(data.roomID);
+          io.to(data.roomID).emit('seeTheFuture', {
+            playerID: data.playerID,
+            future: future
+          });
+        });
         break;
     }
-  })
+  });
+
   socket.on('cardPickedUp', (data) => {
-    let playerIndex = getPlayerIndex(data.roomID, data.playerID)
-    let card = getNewCard(data.roomID)
+    let playerIndex = getPlayerIndex(data.roomID, data.playerID);
+    let card = getNewCard(data.roomID);
     if (card.id === 0) {
-      let response = explodingKittenCard(data.roomID, data.playerID)
-      if (response === 1){
-        io.to(data.roomID).emit('placeExplodingKitten', {roomID: data.roomID, playerID: data.playerID})
+      let response = explodingKittenCard(data.roomID, data.playerID);
+      if (response === 1) {
+        io.to(data.roomID).emit('placeExplodingKitten', {
+          roomID: data.roomID,
+          playerID: data.playerID
+        });
+      } else {
+        io.to(data.roomID).emit('playerLost', { playerID: data.playerID });
       }
-      else {
-        io.to(data.roomID).emit('playerLost', {playerID: data.playerID})
-      }
-    }
-    else {
-      rooms[data.roomID]["players"][playerIndex]["hand"].push(card)
-      nextTurn(data.roomID)
+    } else {
+      rooms[data.roomID]["players"][playerIndex]["hand"].push(card);
+      nextTurn(data.roomID);
       io.to(data.roomID).emit('giveCard', {
         from: 'deck',
         to: data.playerID,
         card: card
-      })
+      });
     }
-  })
+  });
+
+  socket.on('receiveResponseForFavor', (data) => {
+    const roomID = data.roomID
+    console.log(JSON.stringify(data))
+    const receivingPlayerIndex = getPlayerIndex(roomID, data.receivingPlayerID);
+    const givingPlayerIndex = getPlayerIndex(roomID, data.givingPlayerID);
+
+    if (data.cardIndex >= rooms[roomID]["players"][givingPlayerIndex]["hand"].length) {
+      return;
+    }
+
+    const card = rooms[roomID]["players"][givingPlayerIndex]["hand"].splice(data.cardIndex, 1)[0];
+    rooms[roomID]["players"][receivingPlayerIndex]["hand"].push(card);
+
+    io.to(roomID).emit('giveCard', {
+      from: data.givingPlayerID,
+      to: data.receivingPlayerID,
+      card: card
+    });
+
+    io.to(roomID).emit("updatePlayers", rooms[roomID]);
+  });
+
+  socket.on('receiveResponseForNope', (data) => {
+    const roomID = data.roomID
+    if (data.response === 1) {
+      const playerIndex = getPlayerIndex(roomID, data.playerID);
+      const nopeCardIndex = getCardIndex(roomID, data.playerID, 3);
+
+      if (nopeCardIndex !== -1) {
+        rooms[roomID]["players"][playerIndex]["hand"].splice(nopeCardIndex, 1);
+        rooms[roomID].discardPile.unshift({"id": 3, "type": "Nope"});
+        io.to(roomID).emit("updatePlayers", rooms[roomID]);
+      }
+    }
+  });
+
 });
 
 server.listen(3001, () => {
@@ -314,32 +374,6 @@ function seeTheFutureCard(roomID){
   return deck.slice(0, end)
 }
 
-async function favorCard(socket, roomID, receivingPlayerID, givingPlayerID) {
-  function getCardIndexFromPlayer(socket, roomID, playerID) {
-    return new Promise((resolve, reject) => {
-      io.to(playerID).emit('getResponseForFavor')
-
-      socket.once('receiveResponseForFavor', (data) => {
-        if (data) {
-          resolve(data.cardIndex);
-        } else {
-          reject(new Error('No response from client'));
-        }
-      });
-    });
-  }
-  let receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID)
-  let givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID)
-  let cardIndex = await getCardIndexFromPlayer(socket, roomID, givingPlayerID)
-  if (cardIndex >= rooms[roomID]["players"][givingPlayerIndex]["hand"].length){
-    return {error: 'Card not in hand'}
-  }
-  console.log(cardIndex)
-  let card = rooms[roomID]["players"][givingPlayerIndex]["hand"].splice(cardIndex, 1)[0]
-  rooms[roomID]["players"][receivingPlayerIndex]["hand"].push(card)
-  return rooms[roomID]["players"][receivingPlayerIndex]["hand"]
-}
-
 function attackCard(roomID, playerID) {
   let playerIndex = getPlayerIndex(roomID, playerID)
   rooms[roomID]["players"][playerIndex]["hand"].push(getNewCard(roomID))
@@ -380,43 +414,7 @@ function explodingKittenCard(roomID, playerID) {
   }
 }
 
-async function nopeCard(socket, roomID, cardPlacedPlayerID, playerID) {
-  console.log("nopeCard called");
-
-  function getResponseForNope(playerWithNopeID) {
-    return new Promise((resolve, reject) => {
-      console.log("Getting nope response from player:", playerWithNopeID);
-
-      io.to(playerWithNopeID).emit('getResponseForNope');
-
-      // Create a one-time listener for this specific player's response
-      const handler = (respondingSocket, data) => {
-        if (respondingSocket.id === playerWithNopeID) {
-          console.log("Received nope response from player:", playerWithNopeID, data);
-          // Remove all listeners for this response to avoid memory leaks
-          io.sockets.sockets.forEach(socket => {
-            socket.removeAllListeners('receiveResponseForNope');
-          });
-          resolve(data.response);
-        }
-      };
-
-      // Add the listener to all sockets
-      io.sockets.sockets.forEach(socket => {
-        socket.once('receiveResponseForNope', (data) => handler(socket, data));
-      });
-
-      // Timeout after 10 seconds
-      setTimeout(() => {
-        // Clean up listeners
-        io.sockets.sockets.forEach(socket => {
-          socket.removeAllListeners('receiveResponseForNope');
-        });
-        resolve(0);
-      }, 0);
-    });
-  }
-
+function initiateNopeCheck(socket, roomID, cardPlacedPlayerID, playerID, onComplete) {
   let players = rooms[roomID]["players"].filter((player) => player.id !== cardPlacedPlayerID);
   if (playerID) {
     const targetPlayerIndex = getPlayerIndex(roomID, playerID);
@@ -424,17 +422,35 @@ async function nopeCard(socket, roomID, cardPlacedPlayerID, playerID) {
   }
 
   let playersWithNopes = players.filter((player) => {
-    return getCardIndex(roomID, player.id, 3) > -1;
+    if(player) {
+      return getCardIndex(roomID, player.id, 3) > -1;
+    }
   });
 
-  console.log("Players with Nopes:", playersWithNopes);
-
-  for (let player of playersWithNopes) {
-    const response = await getResponseForNope(player.id);
-    if (response === 1) {
-      return { playerID: player.id, response: response };
-    }
+  if (playersWithNopes.length === 0) {
+    onComplete();
+    return;
   }
 
-  return { response: 0 };
+  let currentPlayerIndex = 0;
+  let nopeUsed = false;
+
+  function checkNextPlayer() {
+    if (currentPlayerIndex >= playersWithNopes.length || nopeUsed) {
+      if (!nopeUsed) onComplete();
+      return;
+    }
+
+    let currentPlayer = playersWithNopes[currentPlayerIndex];
+    io.to(currentPlayer.id).emit('getResponseForNope');
+  }
+
+  checkNextPlayer();
+}
+
+function initiateFavorRequest(socket, roomID, receivingPlayerID, givingPlayerID) {
+  const givingPlayerHand = rooms[roomID]["players"][getPlayerIndex(roomID, givingPlayerID)]["hand"];
+  io.to(givingPlayerID).emit('getResponseForFavor', {
+    requestingPlayer: receivingPlayerID
+  });
 }
