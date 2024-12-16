@@ -77,31 +77,35 @@ io.on("connection", (socket) => {
 
   socket.on('cardPlaced', (data) => {
     if (data.cards) {
+      const cards = data.cards;
+      const indices = data.indices;
+      // Remove cards from giving player's hand
+      const givingPlayerIndex = getPlayerIndex(data.roomID, data.givingPlayerID);
+      indices.sort((a, b) => b - a).forEach(index => {
+        rooms[data.roomID]["players"][givingPlayerIndex]["hand"].splice(index, 1);
+      });
       initiateNopeCheck(socket, data.roomID, data.givingPlayerID, null, () => {
         const length = data.cards.length;
         if (length === 2) {
           const cards = data.cards;
           const indices = data.indices;
-          // Remove cards from giving player's hand
+          // Remove cat cards from giving player's hand
           const givingPlayerIndex = getPlayerIndex(data.roomID, data.givingPlayerID);
-          indices.sort((a, b) => b - a).forEach(index => {
-            rooms[data.roomID]["players"][givingPlayerIndex]["hand"].splice(index, 1);
-          });
 
-          // Add a random card from receiving player's hand
+          // Add selected card from receiving player
           const receivingPlayerIndex = getPlayerIndex(data.roomID, data.receivingPlayerID);
           const receivingPlayer = rooms[data.roomID]["players"][receivingPlayerIndex];
-          const randomCardIndex = Math.floor(Math.random() * receivingPlayer.hand.length);
-          const stolenCard = receivingPlayer.hand.splice(randomCardIndex, 1)[0];
 
-          rooms[data.roomID]["players"][givingPlayerIndex]["hand"].push(stolenCard);
-          rooms[data.roomID].discardPile.unshift(...cards);
-
-          io.to(data.roomID).emit('giveCard', {
-            from: data.receivingPlayerID,
-            to: data.givingPlayerID,
-            card: stolenCard
+          // Instead of picking random card, send the hand to the player for selection
+          io.to(data.givingPlayerID).emit('selectCardToSteal', {
+            hand: receivingPlayer.hand,
+            receivingPlayerID: data.receivingPlayerID,
+            givingPlayerID: data.givingPlayerID
           });
+
+          // Add the cat cards to discard pile
+          rooms[data.roomID].discardPile.unshift(...cards);
+          io.to(data.roomID).emit("updatePlayers", rooms[data.roomID]);
         } else if (length === 3) {
           const cards = data.cards;
           const indices = data.indices;
@@ -135,7 +139,7 @@ io.on("connection", (socket) => {
     }
 
     let card = data.card;
-    rooms[data.roomID]["players"][getPlayerIndex(data.roomID, data.playerID || data.givingPlayerID)]["hand"].splice(data.index, 1);
+    rooms[data.roomID]["players"][getPlayerIndex(data.roomID, card.id === 5 ? data.receivingPlayerID : data.playerID || data.givingPlayerID)]["hand"].splice(data.index, 1);
     rooms[data.roomID].discardPile.unshift(card);
     io.to(data.roomID).emit('giveCard', {
       from: data.playerID || data.givingPlayerID,
@@ -231,6 +235,24 @@ io.on("connection", (socket) => {
     rooms[data.roomID]["deck"].splice(data.position, 0, {id: 0, type: 'Exploding Kitten'});
     io.to(data.roomID).emit("updatePlayers", rooms[data.roomID]);
   })
+
+  socket.on('cardToStealSelected', (data) => {
+    const { roomID, cardIndex, receivingPlayerID, givingPlayerID } = data;
+
+    const receivingPlayerIndex = getPlayerIndex(roomID, receivingPlayerID);
+    const givingPlayerIndex = getPlayerIndex(roomID, givingPlayerID);
+
+    const stolenCard = rooms[roomID]["players"][receivingPlayerIndex]["hand"].splice(cardIndex, 1)[0];
+    rooms[roomID]["players"][givingPlayerIndex]["hand"].push(stolenCard);
+
+    io.to(roomID).emit('giveCard', {
+      from: receivingPlayerID,
+      to: givingPlayerID,
+      card: stolenCard
+    });
+
+    io.to(roomID).emit("updatePlayers", rooms[roomID]);
+  });
 
 });
 
@@ -328,7 +350,7 @@ function checkGameOver(roomID) {
 function generateDeck() {
   const cards = [
     { type: "Exploding Kitten", count: 4, id: 0},
-    { type: "Defuse", count: 6, id: 1},
+    { type: "Defuse", count: 4, id: 1},
     { type: "Attack", count: 4, id: 2},
     { type: "Nope", count: 4, id: 3},
     { type: "Skip", count: 4, id: 4},
@@ -370,10 +392,11 @@ function generateHand(roomID, size) {
     })
   }
 
-  let hand = rooms[roomID]["deck"].splice(0, size)
+  let hand = rooms[roomID]["deck"].splice(0, size - 1)
   while (handContainsExpKit(hand)) {
     hand = replaceAllExpKit(hand)
   }
+  hand.splice(Math.floor(Math.random() * hand.length), 0, { type: "Defuse", id: 1});
   return hand
 }
 
