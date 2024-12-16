@@ -16,7 +16,7 @@ const CardBack = ({ player, position, onClick }) => {
 
   if (player === '1' || player === '2') {
     rotationAngle = 90;
-    if (player === '2') {
+    if (player === '1') {
       orient = 'left-8 bottom-16';
     } else {
       orient = 'left-8 top-48';

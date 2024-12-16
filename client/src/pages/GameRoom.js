@@ -25,7 +25,6 @@ const GameRoom = () => {
         socket.emit('getRoomState', { roomID });
 
         socket.on("updatePlayers", (roomData) => {
-            console.log("Player update received in GameRoom:", roomData);
             if (roomData && roomData.players) {
                 const updatedPlayers = roomData.players.map(player => ({
                     name: player.name,
