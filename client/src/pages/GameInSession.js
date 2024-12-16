@@ -253,6 +253,16 @@ const GameInSession = () => {
         });
     };
 
+    const getPosition = (turn) => {
+        if(gameState.players[turn] === localStorage.getItem('id')){
+            return 0
+        }
+        let playerIDs = gameState.players.map((player) => {return player.id})
+        let playerIDsWithOutCurrentPlayer = playerIDs.filter((player) => {return player !== localStorage.getItem('id')})
+        playerIDsWithOutCurrentPlayer.unshift(localStorage.getItem('id'))
+        return playerIDsWithOutCurrentPlayer.indexOf(playerIDs[turn])
+
+    }
 
     const openMenu = () => setVisible(true);
     const resumeGame = () => setVisible(false);
@@ -264,7 +274,7 @@ const GameInSession = () => {
             </div>
             <GameMenu Visible={visible} Resume={resumeGame}/>
 
-            <HighlightTurn/>
+            <HighlightTurn pos={getPosition(gameState.currentTurn) + 1}/>
 
             {/* Your Hand */}
             <div className="player-hand">

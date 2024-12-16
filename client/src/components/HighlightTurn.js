@@ -17,7 +17,7 @@ const HighlightTurn = ({ pos }) => {
     player_3,
     player_4,
     player_5,
-  }[pos] || you_player_1; // default to you_player_1
+  }["player_" + pos] || you_player_1; // default to you_player_1
 
   return (
     <div
