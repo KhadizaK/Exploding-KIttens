@@ -35,6 +35,9 @@ const GameInSession = () => {
     const [showWinScreen, setShowWinScreen] = useState(false);
     const [showLoseScreen, setShowLoseScreen] = useState(false);
     const [gameResults, setGameResults] = useState(null);
+    const [showStealCardModal, setShowStealCardModal] = useState(false);
+    const [stealableCards, setStealableCards] = useState([]);
+    const [stealCardData, setStealCardData] = useState(null);
 
     useEffect(() => {
         if (!roomID) {
@@ -99,6 +102,12 @@ const GameInSession = () => {
             }
         });
 
+        socket.on('selectCardToSteal', (data) => {
+            setStealableCards(data.hand);
+            setStealCardData(data);
+            setShowStealCardModal(true);
+        });
+
         return () => {
             socket.off("updatePlayers");
             socket.off("giveCard");
@@ -108,6 +117,7 @@ const GameInSession = () => {
             socket.off("placeExplodingKitten");
             socket.off("playerLost")
             socket.off("gameOver")
+            socket.off('selectCardToSteal');
         };
     }, [roomID, navigate]);
 
@@ -263,6 +273,18 @@ const GameInSession = () => {
         });
     };
 
+    const handleStealCardSelection = (cardIndex) => {
+        setShowStealCardModal(false);
+        socket.emit('cardToStealSelected', {
+            roomID,
+            cardIndex,
+            receivingPlayerID: stealCardData.receivingPlayerID,
+            givingPlayerID: stealCardData.givingPlayerID
+        });
+        setStealCardData(null);
+        setStealableCards([]);
+    };
+
     const getPosition = (turn) => {
         if(gameState.players[turn] === localStorage.getItem('id')){
             return 0
@@ -311,7 +333,7 @@ const GameInSession = () => {
             ))}
 
             {/* Discard Pile */}
-            {[...Array(gameState.discardPile.length)].map((_, index) => (
+            {gameState.discardPile.length === 0 ? 0 : [...Array(gameState.discardPile)].map((_, index) => (
                 <CardFront playerCard={0}
                            deck={gameState.discardPile.map((card) => card.type.toLowerCase().replaceAll(" ", "_"))} totalCards={gameState.discardPile.length}
                            position={index} key={`your-card-${index}`}
@@ -565,6 +587,31 @@ const GameInSession = () => {
                     </div>
                 </div>
             )}
+            {
+                showStealCardModal &&
+                (
+                    <div className="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-4xl w-full">
+                            <h2 className="text-xl font-bold mb-4">Select a Card to Steal</h2>
+                            <p className="mb-6 text-gray-600">Your cat cards let you steal one of these cards!</p>
+                            <div>
+                            <div className="relative h-72 w-[400px]">
+                                {stealCardData.hand.map((card, index) => (
+                                    <div key={`your-card-${index}`} onClick={() => handleStealCardSelection(index)}>
+                                        <CardFront
+                                            key={index}
+                                            playerCard="future"
+                                            deck={stealCardData.hand.map((card) => "card_back")}
+                                            totalCards={stealCardData.hand.length}
+                                            position={index}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
         </div>
     );

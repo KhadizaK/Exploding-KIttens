@@ -12,6 +12,7 @@ import mercat from '../assets/cards/MERCAT.png';
 import see_the_future from '../assets/cards/SEE_THE_FUTURE.png';
 import shuffle from '../assets/cards/SHUFFLE.png';
 import cat_card from '../assets/cards/CAT_CARD.png';
+import card_back from '../assets/cards/ek-back-card.png';
 
 const CardFront = ({ playerCard, deck = [], totalCards = 0, position, onClick }) => {
   const cardWidth = 64;
@@ -47,7 +48,8 @@ const CardFront = ({ playerCard, deck = [], totalCards = 0, position, onClick })
     see_the_future,
     shuffle,
     cat_card,
-    skip
+    skip,
+    card_back
   };
 
   const cardImage = cardImages[card_type] || null;
