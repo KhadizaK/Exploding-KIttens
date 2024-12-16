@@ -11,10 +11,9 @@ const JoinCreateGameRoom = () => {
     const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || '');
     const [errorMessage, setErrorMessage] = useState('');
 
-    localStorage.setItem('id', socket.id);
-
     useEffect(() => {
         socket.on("gameCreated", (roomData) => {
+            localStorage.setItem('id', socket.id);
             console.log("Room created:", roomData);
             socket.emit('joinGame', {
                 roomID: roomData.roomID,
