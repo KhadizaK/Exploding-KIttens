@@ -12,7 +12,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://exploding-kittens-3w8r.onrender.com",
     methods: ["GET", "POST"],
   },
 });
