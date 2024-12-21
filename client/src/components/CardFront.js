@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import useSound from 'use-sound';
 import defuse from '../assets/cards/DEFUSE.png';
 import attack from '../assets/cards/ATTACK.png';
 import nope from '../assets/cards/NOPE.png';
@@ -13,9 +14,12 @@ import see_the_future from '../assets/cards/SEE_THE_FUTURE.png';
 import shuffle from '../assets/cards/SHUFFLE.png';
 import cat_card from '../assets/cards/CAT_CARD.png';
 import card_back from '../assets/cards/ek-back-card.png';
+import hoverSound from '../assets/sounds/card_hover.mp3';
 
 const CardFront = ({ playerCard, deck = [], totalCards = 0, position, onClick }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [playHoverSound] = useSound(hoverSound); 
+
   const cardWidth = 64;
   const screenWidth = window.innerWidth;
   const cardSpacing = screenWidth < 768 ? 20 : screenWidth <= 1280 ? 32 : cardWidth;
@@ -67,8 +71,11 @@ const CardFront = ({ playerCard, deck = [], totalCards = 0, position, onClick })
         transform: transform,
         zIndex: hoveredCard === position ? 10 : 1 // Set a higher z-index for the hovered card
       }}
-      onMouseEnter={() => setHoveredCard(position)} // Track hovered card
-      onMouseLeave={() => setHoveredCard(null)}    // Reset on hover out
+      onMouseEnter={() => {
+        setHoveredCard(position); 
+        playHoverSound();
+      }}
+      onMouseLeave={() => setHoveredCard(null)}    
       onClick={onClick}
     >
       <img

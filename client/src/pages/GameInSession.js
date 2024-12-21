@@ -300,7 +300,7 @@ const GameInSession = () => {
     const resumeGame = () => setVisible(false);
 
     return (
-        <div className='GameInSession bg-gameroom h-screen flex items-center'>
+        <div className='GameInSession bg-gameroom h-screen flex items-center p-16'>
             <div className="absolute top-4 right-4">
                 <Button title='Pause' onClick={openMenu}/>
             </div>
@@ -333,7 +333,7 @@ const GameInSession = () => {
             ))}
 
             {/* Discard Pile */}
-            {gameState.discardPile.length === 0 ? 0 : [...Array(gameState.discardPile)].map((_, index) => (
+            {gameState.discardPile.length === 0 ? '' : [...Array(gameState.discardPile)].map((_, index) => (
                 <CardFront playerCard={0}
                            deck={gameState.discardPile.map((card) => card.type.toLowerCase().replaceAll(" ", "_"))} totalCards={gameState.discardPile.length}
                            position={index} key={`your-card-${index}`}

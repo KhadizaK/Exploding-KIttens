@@ -1,7 +1,20 @@
 import React from 'react';
+import useSound from 'use-sound';
 import back from '../assets/cards/ek-back-card.png';
+import drawCardSound from '../assets/sounds/draw_card.mp3'; 
 
 const CardBack = ({ player, position, onClick }) => {
+  const [playDrawSound] = useSound(drawCardSound);
+
+  const handleClick = () => {
+    if (player === 'drawing_deck') {
+      playDrawSound(); 
+    }
+    if (onClick) {
+      onClick();
+    }
+  };
+
   let translateXValue = -24 * position;
   const width = window.innerWidth;
 
@@ -46,7 +59,7 @@ const CardBack = ({ player, position, onClick }) => {
           transform: `translate(-120%, -80%)`,
         }),
       }}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <img
         className={`rounded object-cover ease-in-out duration-200 

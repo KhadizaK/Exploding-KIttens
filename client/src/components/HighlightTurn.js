@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import useSound from 'use-sound';
+import turnAlertSound from '../assets/sounds/player_turn_alert.mp3'; 
 
 const HighlightTurn = ({ pos }) => {
+  const [playTurnAlertSound] = useSound(turnAlertSound);
+
+  useEffect(() => {
+    if (pos === 1) {
+      playTurnAlertSound();
+    }
+  }, [pos, playTurnAlertSound]);
+
   const screenWidth = window.innerWidth;
 
   const center = 'right-0 left-0 m-auto';
@@ -11,13 +21,12 @@ const HighlightTurn = ({ pos }) => {
   const player_4 = 'translate-y-16 top-0 right-0';
   const player_5 = '-translate-y-20 bottom-0 right-0';
 
-  // determine the class based on the position prop
   const position = {
     player_2,
     player_3,
     player_4,
     player_5,
-  }["player_" + pos] || you_player_1; // default to you_player_1
+  }["player_" + pos] || you_player_1;
 
   return (
     <div
