@@ -1,20 +1,19 @@
 import React from 'react';
 import useSound from 'use-sound';
-import { motion } from "motion/react";
-import buttonClickSound from '../assets/sounds/button_click.mp3'; // Make sure this path is correct
+import { motion } from 'motion/react';
+import buttonClickSound from '../assets/sounds/button_click.mp3'; 
 
 const Button = ({ title, link, onClick }) => {
     const [play] = useSound(buttonClickSound);
 
-    const handleClick = () => {
-        play(); // Play the click sound
+    const handleClick = (event) => {
+        play(); 
         if (onClick) {
-            onClick();
+            onClick(event); 
         }
     };
 
     return link ? (
-        // Render as a link if a 'link' prop is provided
         <motion.div
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
@@ -26,7 +25,6 @@ const Button = ({ title, link, onClick }) => {
             </a>
         </motion.div>
     ) : (
-        // Otherwise, render as a button with an onClick handler
         <motion.div
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
