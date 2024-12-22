@@ -19,6 +19,24 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 
+// app.post("/login", async (req, res) => {
+//   const {name, password} = req.body;
+//   User.findOne({name: name})
+//   .then(user) {
+//     if (user){
+//       if(user.password === password) {
+//         res.json("Success")
+//       } else {
+//         res.json("the password is incorrect")
+//       }
+//     } else {
+//       res.json("No record exists")
+//     }
+    
+//   }
+  
+// });
+
 // Register a new user
 app.post("/register", async (req, res) => {
   User.create(req.body)
