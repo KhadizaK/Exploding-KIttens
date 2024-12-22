@@ -1,13 +1,32 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const { Socket } = require("dgram");
+const mongoose = require("mongoose"); 
+const bcrypt = require("bcrypt"); 
+const jwt = require("jsonwebtoken"); 
+const User = require("./models/user.model");
+
+app.use(express.json());
 app.use(cors());
 
-let rooms = {}
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log("Connected to MongoDB Atlas")
+  })
+  .catch((err) => console.error("MongoDB connection error:", err));
 
+// Register a new user
+app.post("/register", async (req, res) => {
+  User.create(req.body)
+  .then(users => res.json(users))
+  .catch(err => res.json(err))
+});
+
+let rooms = {}
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -438,3 +457,6 @@ async function nopeCard(socket, roomID, cardPlacedPlayerID, playerID) {
 
   return { response: 0 };
 }
+app.listen(process.env.PORT, () => {
+  console.log('listening on port', process.env.PORT)
+})

@@ -1,32 +1,67 @@
-import React from 'react'
-import Banner from '../components/Banner'
-import Button from '../components/Button'
+import React from 'react';
+import { useState } from 'react';
+import Banner from '../components/Banner';
+import Button from '../components/Button';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const RegisterPage = () => {
+function RegisterPage() {
+    const [name, setName] = useState()
+    const [email, setEmail] = useState()
+    const [password, setPassword] = useState()
+    const navigate = useNavigate()
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        axios.post('http://localhost:3002/register', {name, email, password})
+        .then(result => console.log(result))
+        .catch(err=> console.log(err))
+        navigate('/login')
+    }
+
     return (
         <div className='RegisterPage bg-ek-bg text-ek-txt h-screen flex flex-col space-y-4 justify-center items-center'>
             <Banner />
 
             <div className='flex flex-col items-center space-y-4'>
-                
+                <form onSubmit={{handleSubmit}}>
                 <div className='register-fields flex flex-col justify-between space-y-2'>
                     <div className='username space-x-2 flex'>
                         <label className='text-lg flex flex-grow justify-end' for="uname">Username</label>
-                        <input className='text-sm rounded p-1' type="text" placeholder="Enter Username" name="uname" required />
+                        <input 
+                        className='text-sm rounded p-1' 
+                        type="text" 
+                        placeholder="Enter Username" 
+                        
+                        onChange={(e) => setName(e.target.value)}
+                        />
                     </div>
 
                     <div className='email space-x-2 flex'>
                         <label className='text-lg flex flex-grow justify-end' for="email">Email</label>
-                        <input className='text-sm rounded p-1' type="text" placeholder="Enter Email" name="email" required />
+                        <input 
+                        className='text-sm rounded p-1' 
+                        type="text" 
+                        placeholder="Enter Email" 
+
+                        onChange={(e) => setEmail(e.target.value)}
+                        />
                     </div>
                     <div className='password space-x-2 flex'>
                         <label className='text-lg flex flex-grow justify-end' for="pwd">Password</label>
-                        <input className='text-sm rounded p-1' type="password" placeholder="Enter Password" name="pwd" required />
+                        <input 
+                        className='text-sm rounded p-1' 
+                        type="password" 
+                        placeholder="Enter Password" 
+
+                        onChange={(e) => setPassword(e.target.value)}
+                        />
                     </div>
                 </div>
-
+                <Button type="submit" title='Create Account!' />
+                </form>
                 <div className='register-buttons flex flex-col items-center space-y-2'>
-                    <Button title='Create Account!' link='/' />
+                    
                     <div className='register-with flex flex-row space-x-4'>
                         <a id='x-register' href='/'>
                             <img className='object-cover w-full h-8 hover:brightness-90' alt='Register via Twitter/X'
@@ -42,6 +77,7 @@ const RegisterPage = () => {
                         </a>
                     </div>
                 </div>
+                
             </div>
         </div>
     )
