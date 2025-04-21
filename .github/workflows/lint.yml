@@ -1,0 +1,47 @@
+name: Format Code on PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Prettier
+        id: prettier
+        run: npm run format
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --name-only | grep -E '\.js$|\.css$|\.html$' > changed_files.txt
+          CHANGED_COUNT=$(wc -l < changed_files.txt)
+          echo "Files changed: $CHANGED_COUNT"
+          echo "::set-output name=changed_count::$CHANGED_COUNT"
+
+      - name: Stop build if too many changes
+        if: steps.changes.outputs.changed_count > 3
+        run: |
+          echo "Build stopped. More than 5 files need formatting."
+          exit 1
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed_count <= 3
+        run: |
+          git add .
+          git commit -m "Auto-format code" || echo "No changes to commit"
+          git push
